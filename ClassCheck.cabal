@@ -1,0 +1,34 @@
+Name:                ClassCheck
+Version:             0.0
+Cabal-Version:       >= 1.2
+Synopsis:            Check standard properties on standard classes
+Category:            Testing
+Description:
+  ClassCheck wraps up the expected properties associated with various
+  standard type classes as QuickCheck properties.  Also some morphism
+  properties.
+  .
+  Project wiki page: <http://haskell.org/haskellwiki/ClassCheck>
+  .
+  The module documentation pages have links to colorized source code and
+  to wiki pages where you can read and contribute user comments.  Enjoy!
+  .
+  &#169; 2008 by Conal Elliott; BSD3 license.
+Author:              Conal Elliott 
+Maintainer:          conal@conal.net
+Homepage:            http://haskell.org/haskellwiki/ClassCheck
+Package-Url:         http://code.haskell.org/ClassCheck
+Copyright:           (c) 2008 by Conal Elliott
+License:             BSD3
+Stability:           experimental
+build-type:          Simple
+
+Library
+  hs-Source-Dirs:      src
+  Extensions:          
+  Build-Depends:       base
+  Exposed-Modules:     
+                     Data.ClassCheck
+  ghc-options:         -Wall
+
+--  ghc-prof-options:    -prof -auto-all 
