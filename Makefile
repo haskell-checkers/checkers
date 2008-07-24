@@ -5,7 +5,7 @@
 # server-url-dir =
 
 server = conal.net
-server-dir = /home/conal/stuff/
+server-dir = /home/conal/repos
 server-url-dir = ZongyBong
 
 # extra-configure-args += --enable-library-profiling --enable-executable-profiling
