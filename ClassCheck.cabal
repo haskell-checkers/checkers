@@ -26,9 +26,10 @@ build-type:          Simple
 Library
   hs-Source-Dirs:      src
   Extensions:          
-  Build-Depends:       base
+  Build-Depends:       base, random, QuickCheck
   Exposed-Modules:     
-                     Data.ClassCheck
+                     Test.QCHelp
+                     Test.ClassCheck.Classes
   ghc-options:         -Wall
 
 --  ghc-prof-options:    -prof -auto-all 
