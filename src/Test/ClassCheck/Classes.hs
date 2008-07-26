@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, KindSignatures #-}
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
@@ -14,7 +14,7 @@
 
 module Test.ClassCheck.Classes
 --   (
---     monoidProps
+--     monoid
 --   )
   where
 
@@ -24,31 +24,51 @@ import Test.QuickCheck
 import Test.QCHelp
 
 -- | Properties to check that the 'Monoid' 'a' satisfies the monoid properties.
-monoidProps :: forall a. (Monoid a, Show a, Arbitrary a, EqProp a) =>
+monoid :: forall a. (Monoid a, Show a, Arbitrary a, EqProp a) =>
                a -> TestBatch
-monoidProps = const ( "monoidProps"
-              , [ ("left  identity", leftId  mappend (mempty :: a))
-                , ("right identity", rightId mappend (mempty :: a))
-                , ("associativity" , isAssoc (mappend :: Binop a))
-                ]
-              )
+monoid = const ( "monoid"
+               , [ ("left  identity", leftId  mappend (mempty :: a))
+                 , ("right identity", rightId mappend (mempty :: a))
+                 , ("associativity" , isAssoc (mappend :: Binop a))
+                 ]
+               )
 
+monoidMorphism :: (Monoid a, Monoid b, EqProp b, Show a, Arbitrary a) =>
+                       (a -> b) -> TestBatch
+monoidMorphism q =
+  ( "monoid morphism"
+  , [ ("mempty" , q mempty =-= mempty)
+    , ("mappend", property $ \ a b -> q (a `mappend` b) =-= q a `mappend` q b)
+    ]
+  )
+
+-- functor = const ( "functor"
+--                 , [ ("compose", property $ \ g f -> fmap g . fmap f =-= fmap (g.f)) ]
+--                 )
+
+functorMorphism :: ( Functor f, Functor g, Show (f a), Arbitrary (f a)
+                   , Show (a -> a), EqProp (g a), Arbitrary a) =>
+                  (f a -> g a) -> TestBatch
+functorMorphism q =
+  ( "functor morphism"
+  , [("fmap", property $ \ f l -> q (fmap f l) =-= fmap f (q l))]
+  )
 
 -- | Properties to check that the 'Monad' 'm' satisfies the monad properties.
-monadProps :: forall m a b c.
-              ( Monad m
-              , Show a, Arbitrary a, Arbitrary b
-              , Arbitrary (m a), EqProp (m a), Show (m a)
-              , Arbitrary (m b), EqProp (m b), Show (a -> m b)
-              , Arbitrary (m c), EqProp (m c), Show (b -> m c)
-              ) =>
-              m (a,b) -> TestBatch
-monadProps _ = ( "monad laws"
-                , [ ("left  identity", property left)
-                  , ("right identity", property right)
-                  , ("associativity" , property assoc)
-                  ]
-                )
+monad :: forall m a b c.
+         ( Monad m
+         , Show a, Arbitrary a, Arbitrary b
+         , Arbitrary (m a), EqProp (m a), Show (m a)
+         , Arbitrary (m b), EqProp (m b), Show (a -> m b)
+         , Arbitrary (m c), EqProp (m c), Show (b -> m c)
+         ) =>
+         m (a,b) -> TestBatch
+monad _ = ( "monad laws"
+          , [ ("left  identity", property left)
+            , ("right identity", property right)
+            , ("associativity" , property assoc)
+            ]
+          )
  where
    left  :: (a -> m b) -> a -> Property
    right :: m a -> Property
