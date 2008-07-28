@@ -21,7 +21,7 @@ module Test.QCHelp
     Test, TestBatch, checkBatch, quickBatch, verboseBatch
   , Unop, Binop, X, Y, genR, inverseL, inverse
   , EqProp(..), eq
-  , isAssoc, leftId, rightId, bothId
+  , leftId, rightId, bothId, isAssoc, commutes
   -- , funEq, AsFun(..)
   , Model(..)
   , meq, meq1, meq2, meq3, meq4, meq5
@@ -84,7 +84,7 @@ verboseBatch = checkBatch verbose'
 
 quick', verbose' :: Config
 quick'   = defaultConfig { configMaxTest = 500 }
-verbose' = quick' { configEvery = \n args -> show n ++ ":\n" ++ unlines args }
+verbose' = quick' { configEvery = \ n args -> show n ++ ":\n" ++ unlines args }
 
 
 -- | Unary function, handy for type annotations
@@ -168,6 +168,14 @@ bothId = (liftA2.liftA2) (.&.) leftId rightId
 isAssoc :: (EqProp a, Show a, Arbitrary a) => (a -> a -> a) -> Property
 isAssoc = isAssociativeBy (=-=) arbitrary
 
+-- | Commutative, according to '(=-=)'
+commutes :: EqProp z => (a -> a -> z) -> a -> a -> Property
+commutes (#) a b = a # b =-= b # a
+
+-- TODO: resolve inconsistency in interface style, between 'isAssoc' and
+-- 'commutes'.  The former generates its own arguments, while the latter
+-- doesn't.
+
 {-
 -- TODO: phase out AsFun, in favor of Model. withArray
 
@@ -208,8 +216,8 @@ meq3 :: (Model a b, Model a1 b1, Model a2 b2, Model a3 b3, EqProp b) =>
 meq4 :: ( Model a b, Model a1 b1, Model a2 b2
         , Model a3 b3, Model a4 b4, EqProp b) =>
         (a1 -> a2 -> a3 -> a4 -> a)
-      -> (b1 -> b2 -> b3 -> b4 -> b)
-      -> a1 -> a2 -> a3 -> a4 -> Property
+     -> (b1 -> b2 -> b3 -> b4 -> b)
+     -> a1 -> a2 -> a3 -> a4 -> Property
 meq5 :: ( Model a b, Model a1 b1, Model a2 b2, Model a3 b3
         , Model a4 b4, Model a5 b5, EqProp b) =>
 	(a1 -> a2 -> a3 -> a4 -> a5 -> a)
