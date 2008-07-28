@@ -1,7 +1,7 @@
 Name:                Checkers
 Version:             0.0
 Cabal-Version:       >= 1.2
-Synopsis:            Check standard properties on standard classes
+Synopsis:            Check properties on standard classes
 Category:            Testing
 Description:
   ''Checkers'' wraps up the expected properties associated with various
@@ -28,8 +28,8 @@ Library
   Extensions:          
   Build-Depends:       base, random, QuickCheck
   Exposed-Modules:     
-                     Test.QCHelp
-                     Test.Checkers.Classes
+                       Test.QCHelp
+                       Test.Checkers.Classes
   ghc-options:         -Wall
 
 --  ghc-prof-options:    -prof -auto-all 
