@@ -1,4 +1,4 @@
-Name:                checkers
+Name:                Checkers
 Version:             0.0
 Cabal-Version:       >= 1.2
 Synopsis:            Check properties on standard classes
@@ -8,7 +8,7 @@ Description:
   standard type classes as QuickCheck properties.  Also some morphism
   properties.
   .
-  Project wiki page: <http://haskell.org/haskellwiki/checkers>
+  Project wiki page: <http://haskell.org/haskellwiki/Checkers>
   .
   The module documentation pages have links to colorized source code and
   to wiki pages where you can read and contribute user comments.  Enjoy!
@@ -16,8 +16,8 @@ Description:
   &#169; 2008 by Conal Elliott; BSD3 license.
 Author:              Conal Elliott 
 Maintainer:          conal@conal.net
-Homepage:            http://haskell.org/haskellwiki/checkers
-Package-Url:         http://code.haskell.org/checkers
+Homepage:            http://haskell.org/haskellwiki/Checkers
+Package-Url:         http://code.haskell.org/Checkers
 Copyright:           (c) 2008 by Conal Elliott
 License:             BSD3
 Stability:           experimental
