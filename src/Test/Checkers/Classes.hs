@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
--- Module      :  Test.ClassCheck.Classes
+-- Module      :  Test.Checkers.Classes
 -- Copyright   :  (c) Conal Elliott 2008
 -- License     :  BSD3
 -- 
@@ -12,7 +12,7 @@
 -- Some QuickCheck properties for standard type classes
 ----------------------------------------------------------------------
 
-module Test.ClassCheck.Classes
+module Test.Checkers.Classes
 --   (
 --     monoid
 --   )
