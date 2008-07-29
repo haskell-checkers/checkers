@@ -16,9 +16,12 @@
 ----------------------------------------------------------------------
 
 module Test.Checkers.Classes
---   (
---     monoid
---   )
+  (
+    monoid, monoidMorphism
+  , functor, functorMorphism
+  , applicative, applicativeMorphism
+  , monad, monadMorphism
+  )
   where
 
 import Data.Monoid
@@ -28,6 +31,7 @@ import Test.QuickCheck
 import Text.Show.Functions ()
 
 import Test.QCHelp
+
 
 -- | Properties to check that the 'Monoid' 'a' satisfies the monoid
 -- properties.  The argument value is ignored and is present only for its
@@ -120,6 +124,7 @@ applicative = const ( "applicative"
    homomorphismP f x  = (pure f <*> pure x) =-= (pure (f x) :: m b)
    interchangeP u y   = (u <*> pure y) =-= (pure ($ y) <*> u)
    functorP f x       = (fmap f x) =-= (pure f <*> x)
+
 
 -- | 'Applicative' morphism properties
 applicativeMorphism :: forall f g.
