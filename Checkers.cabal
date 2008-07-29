@@ -15,6 +15,7 @@ Description:
   to wiki pages where you can read and contribute user comments.  Enjoy!
   .
   &#169; 2008 by Conal Elliott; BSD3 license.
+  .
   Contributions from: Thomas Davie.
 Author:              Conal Elliott 
 Maintainer:          conal@conal.net
@@ -27,11 +28,11 @@ build-type:          Simple
 
 Library
   hs-Source-Dirs:      src
-  Extensions:          
+  Extensions:
   Build-Depends:       base, random, QuickCheck, array >= 0.1
   Exposed-Modules:     
                        Test.QCHelp
-                       Test.Checkers.Classes
+                       Test.QuickCheck.Classes
                        Test.QuickCheck.Instances
                        Test.QuickCheck.Instances.Array
                        Test.QuickCheck.Instances.Char

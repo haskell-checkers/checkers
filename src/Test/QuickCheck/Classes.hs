@@ -5,7 +5,7 @@
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
--- Module      :  Test.Checkers.Classes
+-- Module      :  Test.QuickCheck.Classes
 -- Copyright   :  (c) Conal Elliott 2008
 -- License     :  BSD3
 -- 
@@ -15,7 +15,7 @@
 -- Some QuickCheck properties for standard type classes
 ----------------------------------------------------------------------
 
-module Test.Checkers.Classes
+module Test.QuickCheck.Classes
   (
     monoid, monoidMorphism
   , functor, functorMorphism
