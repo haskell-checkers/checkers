@@ -18,14 +18,18 @@
 
 module Test.QCHelp
   (
+  -- * Misc
     Test, TestBatch, checkBatch, quickBatch, verboseBatch
   , Unop, Binop, X, Y, genR, inverseL, inverse
+  -- * Generalized equality
   , EqProp(..), eq
   , leftId, rightId, bothId, isAssoc, commutes
   , MonoidD, monoidD, endoMonoidD, homomorphism
   -- , funEq, AsFun(..)
+  -- * Model-based (semantics-based) testing
   , Model(..)
   , meq, meq1, meq2, meq3, meq4, meq5
+  -- * Some handy testing types
   , Positive, NonZero(..), NonNegative(..)
   , suchThat, suchThatMaybe
   , arbs, gens
@@ -120,7 +124,6 @@ f `inverse` g = f `inverseL` g .&. g `inverseL` f
 ----------------------------------------------------------}
 
 infix  4 =-=
-infixr 3 .&.
 
 -- | Types of values that can be tested for equality, perhaps through
 -- random sampling.
@@ -179,13 +182,15 @@ commutes (#) a b = a # b =-= b # a
 -- doesn't.
 
 -- | Explicit 'Monoid' dictionary.  Doesn't have to correspond to an
--- actual 'Monoid' instance.
+-- actual 'Monoid' instance, though see 'monoidD'.
 data MonoidD a = MonoidD a (a -> a -> a)
 
 -- | 'Monoid' dictionary built from the 'Monoid' methods.
 monoidD :: Monoid a => MonoidD a
 monoidD = MonoidD mempty mappend
 
+-- | Monoid dictionary for an unwrapped endomorphism.  See also 'monoidD'
+-- and 'Endo'.
 endoMonoidD :: MonoidD (a -> a)
 endoMonoidD = MonoidD id (.)
 
@@ -332,6 +337,7 @@ gens n gen =
 
 -- The next two are from twanvl:
 
+infixr 3 .&.
 -- | Property conjunction
 (.&.) :: (Testable prop1, Testable prop2) => prop1 -> prop2 -> Property
 p1 .&. p2 = property $ \b -> if b then property p1 else property p2
