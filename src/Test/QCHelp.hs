@@ -22,6 +22,7 @@ module Test.QCHelp
   , Unop, Binop, X, Y, genR, inverseL, inverse
   , EqProp(..), eq
   , leftId, rightId, bothId, isAssoc, commutes
+  , MonoidD, monoidD, endoMonoidD, homomorphism
   -- , funEq, AsFun(..)
   , Model(..)
   , meq, meq1, meq2, meq3, meq4, meq5
@@ -33,6 +34,7 @@ module Test.QCHelp
 
 import Data.Char (ord)
 -- import Data.Function (on)
+import Data.Monoid
 import Control.Applicative
 import Control.Monad (ap)
 import Control.Arrow ((***))
@@ -175,6 +177,26 @@ commutes (#) a b = a # b =-= b # a
 -- TODO: resolve inconsistency in interface style, between 'isAssoc' and
 -- 'commutes'.  The former generates its own arguments, while the latter
 -- doesn't.
+
+-- | Explicit 'Monoid' dictionary.  Doesn't have to correspond to an
+-- actual 'Monoid' instance.
+data MonoidD a = MonoidD a (a -> a -> a)
+
+-- | 'Monoid' dictionary built from the 'Monoid' methods.
+monoidD :: Monoid a => MonoidD a
+monoidD = MonoidD mempty mappend
+
+endoMonoidD :: MonoidD (a -> a)
+endoMonoidD = MonoidD id (.)
+
+-- | Homomorphism properties with respect to given monoid dictionaries.
+-- See also 'monoidMorphism'.
+homomorphism :: (EqProp b, Show a, Arbitrary a) =>
+                MonoidD a -> MonoidD b -> (a -> b) -> [(String,Property)]
+homomorphism (MonoidD ida opa) (MonoidD idb opb) q =
+  [ ("identity" , q ida =-= idb)
+  , ("binop", property $ \ u v -> q (u `opa` v) =-= q u `opb` q v)
+  ]
 
 {-
 -- TODO: phase out AsFun, in favor of Model. withArray

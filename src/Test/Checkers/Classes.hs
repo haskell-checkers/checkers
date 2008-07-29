@@ -23,12 +23,15 @@ module Test.Checkers.Classes
 
 import Data.Monoid
 import Control.Applicative
+import Control.Monad (join)
 import Test.QuickCheck
 import Text.Show.Functions ()
 
 import Test.QCHelp
 
--- | Properties to check that the 'Monoid' 'a' satisfies the monoid properties.
+-- | Properties to check that the 'Monoid' 'a' satisfies the monoid
+-- properties.  The argument value is ignored and is present only for its
+-- type.
 monoid :: forall a. (Monoid a, Show a, Arbitrary a, EqProp a) =>
           a -> TestBatch
 monoid = const ( "monoid"
@@ -38,32 +41,10 @@ monoid = const ( "monoid"
                  ]
                )
 
-
--- | Explicit 'Monoid' dictionary.  Doesn't have to correspond to an
--- actual 'Monoid' instance.
-data MonoidD a = MonoidD a (a -> a -> a)
-
--- | 'Monoid' dictionary built from the 'Monoid' methods.
-monoidD :: Monoid a => MonoidD a
-monoidD = MonoidD mempty mappend
-
-endoMonoidD :: MonoidD (a -> a)
-endoMonoidD = MonoidD id (.)
-
--- | Homomorphism properties with respect to given monoid dictionaries.
--- See also 'monoidMorphism'.
-homomorphism :: (EqProp b, Show a, Arbitrary a) =>
-                MonoidD a -> MonoidD b -> (a -> b) -> [(String,Property)]
-homomorphism (MonoidD ida opa) (MonoidD idb opb) q =
-  [ ("identity" , q ida =-= idb)
-  , ("binop", property $ \ u v -> q (u `opa` v) =-= q u `opb` q v)
-  ]
-
 -- | Monoid homomorphism properties.  See also 'homomorphism'.
 monoidMorphism :: (Monoid a, Monoid b, EqProp b, Show a, Arbitrary a) =>
                   (a -> b) -> TestBatch
 monoidMorphism q = ("monoid morphism", homomorphism monoidD monoidD q)
-
 
 
 -- | Properties to check that the 'Functor' @m@ satisfies the functor
@@ -74,13 +55,15 @@ functor :: forall m a b c.
            , Show (m a), Arbitrary (m a), EqProp (m a), EqProp (m c)) =>
            m (a,b,c) -> TestBatch
 functor = const ( "functor"
-                , [ ("identity", property identity)
-                  , ("compose" , property compose) ]
+                , [ ("identity", property identityP)
+                  , ("compose" , property composeP) ]
                 )
  where
-   identity = fmap id =-= (id :: m a -> m a)
-   compose :: (b -> c) -> (a -> b) -> Property
-   compose g f = fmap g . fmap f =-= (fmap (g.f) :: m a -> m c)
+   identityP :: Property
+   composeP  :: (b -> c) -> (a -> b) -> Property
+   
+   identityP = fmap id =-= (id :: m a -> m a)
+   composeP g f = fmap g . fmap f =-= (fmap (g.f) :: m a -> m c)
 
 -- Note the similarity between 'functor' and 'monoidMorphism'.  The
 -- functor laws say that 'fmap' is a homomorphism w.r.t '(.)':
@@ -91,28 +74,71 @@ functor = const ( "functor"
 -- three different types.
 
 
+-- | 'Functor' morphism (natural transformation) properties
 functorMorphism :: forall f g.
                    ( Functor f, Functor g
                    , Arbitrary (f X), Show (f X), EqProp (g Y)
                    ) =>
-                  (forall c. f c -> g c) -> TestBatch
-functorMorphism q =
-  ( "functor morphism"
-  , [("fmap", property fmapP)]
-  )
+                  (forall a. f a -> g a) -> TestBatch
+functorMorphism q = ("functor morphism", [("fmap", property fmapP)])
  where
    -- fmapP :: (X -> Y) -> f X -> Property
    -- fmapP h l = q (fmap h l) =-= fmap h (q l)
    fmapP :: (X -> Y) -> Property
    fmapP h = q . fmap h =-= fmap h . q
 
--- or
---   property $ \ h -> q . fmap h =-= fmap h . q
-
 -- Note: monomorphism prevent us from saying @commutes (.) q (fmap h)@,
 -- since @fmap h@ is used at two different types.
 
--- | Properties to check that the 'Monad' @m@ satisfies the monad properties.
+-- | Properties to check that the 'Applicative' @m@ satisfies the monad properties
+applicative :: forall m a b c.
+               ( Applicative m
+               , Arbitrary a, Arbitrary b, Arbitrary (m a)
+               , Arbitrary (m (b -> c)), Show (m (b -> c))
+               , Arbitrary (m (a -> b)), Show (m (a -> b))
+               , Show a, Show (m a)
+               , EqProp (m a), EqProp (m b), EqProp (m c)
+               ) =>
+               m (a,b,c) -> TestBatch
+applicative = const ( "applicative"
+                    , [ ("identity"    , property identityP)
+                      , ("composition" , property compositionP)
+                      , ("homomorphism", property homomorphismP)
+                      , ("interchange" , property interchangeP)
+                      , ("functor"     , property functorP)
+                      ]
+                    )
+ where
+   identityP     :: m a -> Property
+   compositionP  :: m (b -> c) -> m (a -> b) -> m a -> Property
+   homomorphismP :: (a -> b) -> a -> Property
+   interchangeP  :: m (a -> b) -> a -> Property
+   functorP      :: (a -> b) -> m a -> Property
+   
+   identityP v        = (pure id <*> v) =-= v
+   compositionP u v w = (pure (.) <*> u <*> v <*> w) =-= (u <*> (v <*> w))
+   homomorphismP f x  = (pure f <*> pure x) =-= (pure (f x) :: m b)
+   interchangeP u y   = (u <*> pure y) =-= (pure ($ y) <*> u)
+   functorP f x       = (fmap f x) =-= (pure f <*> x)
+
+-- | 'Applicative' morphism properties
+applicativeMorphism :: forall f g.
+                       ( Applicative f, Applicative g
+                       , Show (f X), Arbitrary (f X), EqProp (g X), EqProp (g Y)
+                       , Show (f (X -> Y)), Arbitrary (f (X -> Y))) =>
+                       (forall a. f a -> g a) -> TestBatch
+applicativeMorphism q =
+  ( "applicative morphism"
+  , [("pure", property pureP), ("apply", property applyP)] )
+ where
+   pureP  :: X -> Property
+   applyP :: f (X->Y) -> f X -> Property
+   
+   pureP a = q (pure a) =-= pure a
+   applyP mf mx = q (mf <*> mx) =-= (q mf <*> q mx)
+
+
+-- | Properties to check that the 'Monad' @m@ satisfies the monad properties
 monad :: forall m a b c.
          ( Monad m
          , Show a, Arbitrary a, Arbitrary b
@@ -121,28 +147,57 @@ monad :: forall m a b c.
          , Arbitrary (m c), EqProp (m c)
          ) =>
          m (a,b) -> TestBatch
-monad _ = ( "monad laws"
-          , [ ("left  identity", property left)
-            , ("right identity", property right)
-            , ("associativity" , property assoc)
-            ]
-          )
+monad = const ( "monad laws"
+              , [ ("left  identity", property leftP)
+                , ("right identity", property rightP)
+                , ("associativity" , property assocP)
+                ]
+              )
  where
-   left  :: (a -> m b) -> a -> Property
-   right :: m a -> Property
-   assoc :: m a -> (a -> m b) -> (b -> m c) -> Property
+   leftP  :: (a -> m b) -> a -> Property
+   rightP :: m a -> Property
+   assocP :: m a -> (a -> m b) -> (b -> m c) -> Property
    
-   left f a    = (return a >>= f)  =-= f a
-   right m     = (m >>= return)    =-=  m
-   assoc m f g = ((m >>= f) >>= g) =-= (m >>= (\x -> f x >>= g))
+   leftP f a    = (return a >>= f)  =-= f a
+   rightP m     = (m >>= return)    =-=  m
+   assocP m f g = ((m >>= f) >>= g) =-= (m >>= (\x -> f x >>= g))
 
+-- | 'Monad' morphism properties
 
-applicativeMorphism :: ( Applicative f, Applicative g
-                       , Arbitrary a, Show a, EqProp (g a)) =>
-                       (f a -> g a) -> TestBatch
-applicativeMorphism q =
-  ( "applicative morphism"
-  , [ ("pure" , property $ \ a -> q (pure a) =-= pure a)
-    -- , ("apply", property $ \ mf mx -> q (mf <*> mx) =-= (q mf <*> q mx))
-    ]
-  )
+-- | 'Applicative' morphism properties
+monadMorphism :: forall f g.
+                 ( Monad f, Monad g, Functor g
+                 , Show (f X), Show (f (X -> Y)), Show (f (f (X -> Y)))
+                 , Arbitrary (f X), Arbitrary (f Y)
+                 , Arbitrary (f (X -> Y)) , Arbitrary (f (f (X -> Y)))
+                 , EqProp (g X), EqProp (g Y), EqProp (g (X -> Y))
+                 ) =>
+                (forall a. f a -> g a) -> TestBatch
+monadMorphism q =
+  ( "monad morphism"
+  , [ ("return", property returnP), ("bind", property bindP), ("join", property joinP) ] )
+ where
+   returnP :: X -> Property
+   bindP :: f X -> (X -> f Y) -> Property
+   joinP :: f (f (X->Y)) -> Property
+   
+   returnP a = q (return a) =-= return a
+   bindP u k = q (u >>= k)  =-= (q u >>= q . k)
+   joinP uu  = q (join uu)  =-= join (fmap q (q uu))
+
+-- The join and bind properties are redundant.  Pick one.
+
+--      q (join uu)
+--   == q (uu >>= id)
+--   == q uu >>= q . id
+--   == q uu >>= q
+--   == join (fmap q (q uu))
+
+--      q (u >>= k)
+--   == q (fmap k (join u))
+--   == fmap k (q (join u))  -- if also a functor morphism
+--   == fmap k (join (fmap q (q uu)))
+--   == fmap k (q u >>= q)
+--   == ???
+
+-- I'm stuck at the end here.  What's missing?
