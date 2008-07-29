@@ -32,4 +32,6 @@ Library
                        Test.Checkers.Classes
   ghc-options:         -Wall
 
+-- Contributors: 
+
 --  ghc-prof-options:    -prof -auto-all 
