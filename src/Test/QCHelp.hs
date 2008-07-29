@@ -25,6 +25,7 @@ module Test.QCHelp
   , EqProp(..), eq
   , leftId, rightId, bothId, isAssoc, commutes
   , MonoidD, monoidD, endoMonoidD, homomorphism
+  , idempotent, idempotent2, idemElem
   -- , funEq, AsFun(..)
   -- * Model-based (semantics-based) testing
   , Model(..)
@@ -202,6 +203,21 @@ homomorphism (MonoidD ida opa) (MonoidD idb opb) q =
   [ ("identity" , q ida =-= idb)
   , ("binop", property $ \ u v -> q (u `opa` v) =-= q u `opb` q v)
   ]
+
+-- | The unary function @f@ is idempotent, i.e., @f . f == f@
+idempotent :: (Show a, Arbitrary a, EqProp a) =>
+               (a -> a) -> Property
+idempotent f = idemElem (.) f
+
+-- | A binary function @op@ is idempotent, i.e., @x `op` x == x@, for all @x@
+idempotent2 :: (Show a, Arbitrary a, EqProp a) =>
+               (a -> a -> a) -> Property
+idempotent2 = property . idemElem
+
+-- | A binary function @op@ is has an idempotent element @x@, i.e.,
+-- @x `op` x == x@
+idemElem :: EqProp a => (a -> a -> a) -> a -> Property
+idemElem op x = x `op` x =-= x
 
 {-
 -- TODO: phase out AsFun, in favor of Model. withArray
