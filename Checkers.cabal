@@ -1,12 +1,13 @@
 Name:                checkers
 Version:             0.0
 Cabal-Version:       >= 1.2
-Synopsis:            Check properties on standard classes
+Synopsis:            Check properties on standard classes and data structures.
 Category:            Testing
 Description:
   ''Checkers'' wraps up the expected properties associated with various
   standard type classes as QuickCheck properties.  Also some morphism
-  properties.
+  properties.  It also provides arbitrary instances and generator combinators
+  for common data types.
   .
   Project wiki page: <http://haskell.org/haskellwiki/checkers>
   .
@@ -14,6 +15,7 @@ Description:
   to wiki pages where you can read and contribute user comments.  Enjoy!
   .
   &#169; 2008 by Conal Elliott; BSD3 license.
+  Contributions from: Thomas Davie.
 Author:              Conal Elliott 
 Maintainer:          conal@conal.net
 Homepage:            http://haskell.org/haskellwiki/checkers
@@ -26,12 +28,18 @@ build-type:          Simple
 Library
   hs-Source-Dirs:      src
   Extensions:          
-  Build-Depends:       base, random, QuickCheck
+  Build-Depends:       base, random, QuickCheck, array >= 0.1
   Exposed-Modules:     
                        Test.QCHelp
                        Test.Checkers.Classes
-  ghc-options:         -Wall
-
--- Contributors: 
+                       Test.QuickCheck.Instances
+                       Test.QuickCheck.Instances.Array
+                       Test.QuickCheck.Instances.Char
+                       Test.QuickCheck.Instances.Int
+                       Test.QuickCheck.Instances.List
+                       Test.QuickCheck.Instances.Maybe
+                       Test.QuickCheck.Instances.Tuple
+                       Test.QuickCheck.Instances.Word
+  ghc-options:         -Wall -fno-warn-orphans
 
 --  ghc-prof-options:    -prof -auto-all 
