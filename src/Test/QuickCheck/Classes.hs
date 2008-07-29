@@ -30,7 +30,7 @@ import Control.Monad (join)
 import Test.QuickCheck
 import Text.Show.Functions ()
 
-import Test.QCHelp
+import Test.QuickCheck.Help
 
 
 -- | Properties to check that the 'Monoid' 'a' satisfies the monoid

@@ -6,7 +6,7 @@
 
 ----------------------------------------------------------------------
 -- |
--- Module      :  Test.QCHelp
+-- Module      :  Test.QuickCheck.Help
 -- Copyright   :  (c) Conal Elliott 2007,2008
 -- License     :  BSD3
 -- 
@@ -16,10 +16,10 @@
 -- Some QuickCheck helpers
 ----------------------------------------------------------------------
 
-module Test.QCHelp
+module Test.QuickCheck.Help
   (
   -- * Misc
-    Test, TestBatch, checkBatch, quickBatch, verboseBatch
+    Test, TestBatch, unbatch, checkBatch, quickBatch, verboseBatch
   , Unop, Binop, X, Y, genR, inverseL, inverse
   -- * Generalized equality
   , EqProp(..), eq
@@ -42,7 +42,7 @@ import Data.Char (ord)
 import Data.Monoid
 import Control.Applicative
 import Control.Monad (ap)
-import Control.Arrow ((***))
+import Control.Arrow ((***),first)
 import Data.List (foldl')
 import Test.QuickCheck
 import Test.QuickCheck.Utils
@@ -67,6 +67,12 @@ type Test = (String,Property)
 
 -- | Named batch of tests
 type TestBatch = (String,[Test])
+
+-- | Flatten a test batch for inclusion in another
+unbatch :: TestBatch -> [Test]
+unbatch (batchName,props) = map (first ((batchName ++ ": ")++)) props
+
+-- TODO: consider a tree structure so that flattening is unnecessary.
 
 -- | Run a batch of tests.  See 'quickBatch' and 'verboseBatch'.
 checkBatch :: Config -> TestBatch -> IO ()
