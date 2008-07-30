@@ -1,0 +1,21 @@
+Checkers [1] is a library for reusable QuickCheck properties, particularly
+for standard type classes (class laws and class morphisms [2]).  Most of
+Reactive [3] can be specified and tested using just these properties.
+Also lots of support for randomly generating data values (thanks to Thomas
+Davie).
+
+Please share any comments & suggestions on the discussion (talk) page at
+[1].
+
+You can configure, build, and install all in the usual way with Cabal
+commands.
+
+  runhaskell Setup.lhs configure
+  runhaskell Setup.lhs build
+  runhaskell Setup.lhs install
+
+References:
+
+[1] http://haskell.org/haskellwiki/checkers
+[2] http://conal.net/papers/simply-reactive
+[3] http://haskell.org/haskellwiki/reactive
