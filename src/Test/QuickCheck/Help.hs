@@ -99,6 +99,30 @@ quick', verbose' :: Config
 quick'   = defaultConfig { configMaxTest = 500 }
 verbose' = quick' { configEvery = \ n args -> show n ++ ":\n" ++ unlines args }
 
+-- TODO: change TestBatch to be hierarchical/recursive, rather than
+-- two-level.
+
+{-
+
+data Batch n t = Test t | Batch [LBatch n t]
+type LBatch n t = (n, Batch n t)
+
+-- | Run a batch of tests.  See 'quickBatch' and 'verboseBatch'.
+checkL :: Config -> LBatch -> IO ()
+checkL config = checkL' 0
+ where
+
+  ... working here ...
+
+ checkL' ind (name,batch) =
+  do putStrLn $ "\n" ++ name ++ ":"
+     mapM_ pr tests
+ where
+   pr (s,p) = do putStr (padTo (width + 4) ("  "++s ++ ":"))
+                 check config p
+   width    = foldl' max 0 (map (length.fst) tests)
+
+-}
 
 -- | Unary function, handy for type annotations
 type Unop a = a -> a
