@@ -24,3 +24,9 @@ instance Arbitrary Int8 where
 -}
 positiveInt :: (Arbitrary a,Integral a) => Gen a
 positiveInt = liftM ((+1) . abs) arbitrary
+
+negativeInt :: (Arbitrary a, Integral a) => Gen a
+negativeInt = liftM (((-1) -) . abs) arbitrary
+
+nonZeroInt :: (Arbitrary a,Integral a) => Gen a
+nonZeroInt = oneof [positiveInt, negativeInt]
