@@ -41,7 +41,7 @@ module Test.QuickCheck.Help
 -- import Data.Function (on)
 import Data.Monoid
 import Control.Applicative
-import Control.Monad (ap)
+import Control.Monad (ap,liftM3)
 import Control.Arrow ((***),first)
 import Data.List (foldl')
 import Test.QuickCheck
@@ -369,8 +369,18 @@ gens n gen =
 
 
 notOneof :: (Eq a,Arbitrary a) => [a] -> Gen a
-notOneof es = arbitrary >>= (\x -> if x `elem` es then notOneof es
-                                                  else return x)
+notOneof es = arbitrarySatisfying (not . (`elem` es))
+
+arbitrarySatisfying :: Arbitrary a => (a -> Bool) -> Gen a
+arbitrarySatisfying = (flip satisfiesM) arbitrary
+
+satisfiesM :: Monad m => (a -> Bool) -> m a -> m a
+satisfiesM p x = x >>= if' p return (const (satisfiesM p x))
+
+if' :: Monad m => m Bool -> m a -> m a -> m a
+if' = liftM3 ifthenelse
+ifthenelse :: Bool -> a -> a -> a
+ifthenelse c t e = if c then t else e
 
 -- The next two are from twanvl:
 
