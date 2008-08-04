@@ -31,6 +31,7 @@ import Test.QuickCheck
 import Text.Show.Functions ()
 
 import Test.QuickCheck.Help
+import Test.QuickCheck.Instances.Char ()
 
 
 -- | Properties to check that the 'Monoid' 'a' satisfies the monoid

@@ -7,19 +7,18 @@ module Test.QuickCheck.Instances.Char
 
 import Data.Char
 import Test.QuickCheck
+import Test.QuickCheck.Help
 import Control.Monad
 
 instance Arbitrary Char where
-  arbitrary = liftM chr (oneof $ map return [0..255])
-  coarbitrary n = variant (ord n)
+    arbitrary     = choose ('\0','\255')
+    coarbitrary c = variant (ord c `rem` 4)
 
 {- | Generates a 'non space' character, i.e. any ascii except
      ' ', '\t', '\n' and '\r'.
 -}
 nonSpace :: Gen Char
-nonSpace = oneof . map return
-                 . filter (not . (`elem` " \t\n\r"))
-                 . map chr $ [1..255]
+nonSpace = notOneof " \t\n\r"
 
 {- | Generates any whitespace character, including new lines.
 -}

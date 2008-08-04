@@ -35,9 +35,9 @@ module Test.QuickCheck.Help
   , suchThat, suchThatMaybe
   , arbs, gens
   , (.&.)
+  , notOneof
   ) where
 
-import Data.Char (ord)
 -- import Data.Function (on)
 import Data.Monoid
 import Control.Applicative
@@ -54,10 +54,6 @@ import System.Random
 {----------------------------------------------------------
     Misc
 ----------------------------------------------------------}
-
-instance Arbitrary Char where
-    arbitrary     = choose ('\0','\255')
-    coarbitrary c = variant (ord c `rem` 4)
 
 instance Applicative Gen where { pure = return ; (<*>) = ap }
 
@@ -371,6 +367,10 @@ gens :: Int -> Gen a -> IO [a]
 gens n gen =
   fmap (\ rnd -> generate 1000 rnd (sequence (replicate n gen))) newStdGen
 
+
+notOneof :: (Eq a,Arbitrary a) => [a] -> Gen a
+notOneof es = arbitrary >>= (\x -> if x `elem` es then notOneof es
+                                                  else return x)
 
 -- The next two are from twanvl:
 
