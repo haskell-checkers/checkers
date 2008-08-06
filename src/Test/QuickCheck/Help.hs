@@ -23,7 +23,7 @@ module Test.QuickCheck.Help
   , Unop, Binop, X, Y, genR, inverseL, inverse
   -- * Generalized equality
   , EqProp(..), eq
-  , leftId, rightId, bothId, isAssoc, commutes
+  , leftId, rightId, bothId, isAssoc, isCommut, commutes
   , MonoidD, monoidD, endoMonoidD, homomorphism
   , idempotent, idempotent2, idemElem
   -- , funEq, AsFun(..)
@@ -195,9 +195,9 @@ isAssoc = isAssociativeBy (=-=) arbitrary
 commutes :: EqProp z => (a -> a -> z) -> a -> a -> Property
 commutes (#) a b = a # b =-= b # a
 
--- TODO: resolve inconsistency in interface style, between 'isAssoc' and
--- 'commutes'.  The former generates its own arguments, while the latter
--- doesn't.
+-- | Commutative, according to '(=-=)'
+isCommut :: (EqProp a, Show a, Arbitrary a) => (a -> a -> a) -> Property
+isCommut = isCommutableBy (=-=) arbitrary
 
 -- | Explicit 'Monoid' dictionary.  Doesn't have to correspond to an
 -- actual 'Monoid' instance, though see 'monoidD'.
