@@ -60,3 +60,5 @@ delay i d = unsafePerformIO $ do
             threadDelay (d*1000)
             putMVar v i
   takeMVar v
+
+-- I doubt the Later type is needed.  (Conal)

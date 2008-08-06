@@ -14,6 +14,8 @@ instance Arbitrary Char where
     arbitrary     = choose ('\0','\255')
     coarbitrary c = variant (ord c `rem` 4)
 
+-- Bob: why the `rem` 4 ?
+
 {- | Generates a 'non space' character, i.e. any ascii except
      ' ', '\t', '\n' and '\r'.
 -}

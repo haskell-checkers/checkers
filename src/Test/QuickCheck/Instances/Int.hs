@@ -25,8 +25,14 @@ instance Arbitrary Int8 where
 positiveInt :: (Arbitrary a,Integral a) => Gen a
 positiveInt = liftM ((+1) . abs) arbitrary
 
+{- | Generates a negative integer.
+-}
 negativeInt :: (Arbitrary a, Integral a) => Gen a
-negativeInt = liftM (((-1) -) . abs) arbitrary
+negativeInt = liftM negate positiveInt
 
+-- negativeInt = liftM (((-1) -) . abs) arbitrary
+
+{- | Generates a non-zero integer.
+-}
 nonZeroInt :: (Arbitrary a,Integral a) => Gen a
 nonZeroInt = oneof [positiveInt, negativeInt]
