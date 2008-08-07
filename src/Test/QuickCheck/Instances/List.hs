@@ -7,10 +7,10 @@ import Control.Monad
      argument.
 -}
 nonEmpty :: Arbitrary a => Gen a -> Gen [a]
-nonEmpty x = liftM2 (:) x (oneof [return [],nonEmpty x])
+nonEmpty x = liftM2 (:) x (anyList x)
 
 {- | Generates any list (possibly empty) with the contents generated using
      its argument.
 -}
 anyList :: Arbitrary a => Gen a -> Gen [a]
-anyList x = oneof [return [],anyList x]
+anyList x = frequency [(1, return []), (4, nonEmpty x)]

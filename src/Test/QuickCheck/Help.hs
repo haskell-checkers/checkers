@@ -32,6 +32,7 @@ module Test.QuickCheck.Help
   , meq, meq1, meq2, meq3, meq4, meq5
   -- * Some handy testing types
   , Positive, NonZero(..), NonNegative(..)
+  , increasing, nondecreasing
   , suchThat, suchThatMaybe
   , arbs, gens
   , (.&.)
@@ -41,12 +42,14 @@ module Test.QuickCheck.Help
 -- import Data.Function (on)
 import Data.Monoid
 import Control.Applicative
-import Control.Monad (ap,liftM3)
+import Control.Monad (ap)
 import Control.Arrow ((***),first)
 import Data.List (foldl')
 import Test.QuickCheck
 import Test.QuickCheck.Utils
 import System.Random
+
+import Test.QuickCheck.Instances.List
 
 -- import qualified Data.Stream as S
 
@@ -319,28 +322,47 @@ instance (Model a b, Model a' b') => Model (a,a') (b,b') where
     Some handy testing types
 ----------------------------------------------------------}
 
--- from QC2
+-- from QC2, plus tweaks
 
 type Positive a = NonZero (NonNegative a)
 
-newtype NonZero a = NonZero a
+newtype NonZero a = NonZero { unNonZero :: a }
  deriving ( Eq, Ord, Num, Integral, Real, Enum, Show, Read )
 
-instance (Num a, Ord a, Arbitrary a) => Arbitrary (NonZero a) where
-  arbitrary = fmap NonZero $ arbitrary `suchThat` (/= 0)
-  coarbitrary = error "NonZero: coarbitrary undefined"
+instance (Num a, Arbitrary a) => Arbitrary (NonZero a) where
+  arbitrary   = fmap NonZero $ arbitrary `suchThat` (/= 0)
+  coarbitrary = coarbitrary . unNonZero
 
-newtype NonNegative a = NonNegative a
+newtype NonNegative a = NonNegative { unNonNegative :: a }
  deriving ( Eq, Ord, Num, Integral, Real, Enum, Show, Read )
 
-instance (Num a, Ord a, Arbitrary a) => Arbitrary (NonNegative a) where
-  arbitrary =
-    frequency
-      [ (5, (NonNegative . abs) `fmap` arbitrary)
-      , (1, return 0)
-      ]
-  coarbitrary = error "NonNegative: coarbitrary undefined"
+nonnegative :: (Num a, Arbitrary a) => Gen a
+nonnegative = frequency
+               [ (5, abs <$> arbitrary)
+               , (1, return 0)
+               ]
 
+positive :: (Num a, Arbitrary a) => Gen a
+positive = ((1+).abs) <$> arbitrary
+
+
+instance (Num a, Arbitrary a) => Arbitrary (NonNegative a) where
+  arbitrary   = nonnegative
+  coarbitrary = coarbitrary . unNonNegative
+
+sumA :: (Applicative f, Num a) => f a -> f [a] -> f [a]
+sumA = liftA2 (scanl (+))
+
+monotonic :: (Arbitrary a, Num a) => Gen a -> Gen [a]
+monotonic gen = sumA arbitrary (anyList gen)
+
+-- | Generate increasing values
+increasing :: (Arbitrary a, Num a) => Gen [a]
+increasing = monotonic positive
+
+-- | Generate nondecreasing values
+nondecreasing :: (Arbitrary a, Num a) => Gen [a]
+nondecreasing = monotonic nonnegative
 
 -- | Generates a value that satisfies a predicate.
 suchThat :: Gen a -> (a -> Bool) -> Gen a
@@ -372,15 +394,13 @@ notOneof :: (Eq a,Arbitrary a) => [a] -> Gen a
 notOneof es = arbitrarySatisfying (not . (`elem` es))
 
 arbitrarySatisfying :: Arbitrary a => (a -> Bool) -> Gen a
-arbitrarySatisfying = (flip satisfiesM) arbitrary
+arbitrarySatisfying = flip satisfiesM arbitrary
 
 satisfiesM :: Monad m => (a -> Bool) -> m a -> m a
 satisfiesM p x = x >>= if' p return (const (satisfiesM p x))
 
-if' :: Monad m => m Bool -> m a -> m a -> m a
-if' = liftM3 ifthenelse
-ifthenelse :: Bool -> a -> a -> a
-ifthenelse c t e = if c then t else e
+if' :: Applicative f => f Bool -> f a -> f a -> f a
+if' = liftA3 (\ c t e -> if c then t else e)
 
 -- The next two are from twanvl:
 
