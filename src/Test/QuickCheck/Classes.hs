@@ -151,7 +151,7 @@ monad :: forall m a b c.
          , Arbitrary (m b), EqProp (m b)
          , Arbitrary (m c), EqProp (m c)
          ) =>
-         m (a,b) -> TestBatch
+         m (a,b,c) -> TestBatch
 monad = const ( "monad laws"
               , [ ("left  identity", property leftP)
                 , ("right identity", property rightP)
