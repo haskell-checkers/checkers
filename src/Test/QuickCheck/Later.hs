@@ -12,8 +12,8 @@
 ----------------------------------------------------------------------
 
 module Test.QuickCheck.Later
-  ( isAssocDistinctTimes
-  , isCommutDistinctTimes
+  ( isAssocTimes
+  , isCommutTimes
   ) where
 
 import Test.QuickCheck.Help
@@ -25,31 +25,25 @@ import System.Random
 import System.IO.Unsafe
 import Control.Concurrent
 
-isAssocDistinctTimes (**) =
-  forAll arbitrary $ \ (Later va ta) ->
-  forAll arbitrary $ \ (Later vb tb) ->
-  forAll arbitrary $ \ (Later vc tc) ->
-  ta /= tb && tb /= tc && ta /= tc ==>
-  (va ** vb) ** vc =-= va ** (vb ** vc)
+isCommutTimes (**) =
+  forAll (genR (1,100)) $ \t1 ->
+  forAll (genR (1,100)) $ \t2 ->
+  forAll (arbitrary) $ \v ->
+  let v1 = (delay v t1)
+      v2 = (delay v t2)
+  in
+    v1 ** v2 =-= v2 ** v1
 
-isCommutDistinctTimes (**) =
-  forAll arbitrary $ \ (Later va ta) ->
-  forAll arbitrary $ \ (Later vb tb) ->
-  ta /= tb ==> (va ** vb) =-= vb ** va
-
--- The second argument is the number of milliseconds it will take for
--- before first argument comes to fruitation
-data Later a = Later a Int 
-  deriving Show
-
-later :: a -> Int -> Later a
-later a t = Later (delay a t) t
-
-instance Arbitrary a => Arbitrary (Later a) where
-  -- The 17ms seems to be the minimum amount of time for two
-  -- threadDelay's to be different.
-  arbitrary = liftA2 later arbitrary (liftA (*17) $ genR (1,10))
-  coarbitrary = undefined
+isAssocTimes (**) =
+  forAll (genR (1,100)) $ \t1 ->
+  forAll (genR (1,100)) $ \t2 ->
+  forAll (genR (1,100)) $ \t3 ->
+  forAll (arbitrary) $ \v ->
+  let v1 = (delay v t1)
+      v2 = (delay v t2)
+      v3 = (delay v t3)
+  in
+    (v1 ** v2) ** v3 =-= v1 ** (v2 ** v3)
 
 delay :: a ->
          Int -> -- milliseconds
