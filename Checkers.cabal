@@ -33,6 +33,7 @@ Library
   Exposed-Modules:     
                        Test.QuickCheck.Help
                        Test.QuickCheck.Classes
+                       Test.QuickCheck.Bottoms
                        Test.QuickCheck.Instances
                        Test.QuickCheck.Instances.Array
                        Test.QuickCheck.Instances.Char

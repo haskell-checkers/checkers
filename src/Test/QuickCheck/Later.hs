@@ -19,8 +19,8 @@ module Test.QuickCheck.Later
 import Test.QuickCheck.Help
 import Test.QuickCheck
 
-import Control.Applicative
-import System.Random
+import Control.Applicative ()
+import System.Random       ()
 
 import System.IO.Unsafe
 import Control.Concurrent
