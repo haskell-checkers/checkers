@@ -36,13 +36,14 @@ module Test.QuickCheck.Help
   , suchThat, suchThatMaybe
   , arbs, gens
   , (.&.)
-  , notOneof
+  , arbitrarySatisfying
   ) where
 
 -- import Data.Function (on)
 import Data.Monoid
 import Control.Applicative
 import Control.Monad (ap)
+import Control.Monad.Extensions
 import Control.Arrow ((***),first)
 import Data.List (foldl')
 import Test.QuickCheck
@@ -389,18 +390,8 @@ gens :: Int -> Gen a -> IO [a]
 gens n gen =
   fmap (\ rnd -> generate 1000 rnd (sequence (replicate n gen))) newStdGen
 
-
-notOneof :: (Eq a,Arbitrary a) => [a] -> Gen a
-notOneof es = arbitrarySatisfying (not . (`elem` es))
-
 arbitrarySatisfying :: Arbitrary a => (a -> Bool) -> Gen a
 arbitrarySatisfying = flip satisfiesM arbitrary
-
-satisfiesM :: Monad m => (a -> Bool) -> m a -> m a
-satisfiesM p x = x >>= if' p return (const (satisfiesM p x))
-
-if' :: Applicative f => f Bool -> f a -> f a -> f a
-if' = liftA3 (\ c t e -> if c then t else e)
 
 -- The next two are from twanvl:
 
