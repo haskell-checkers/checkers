@@ -21,12 +21,17 @@ module Test.QuickCheck.Classes
   , functor, functorMorphism
   , applicative, applicativeMorphism
   , monad, monadMorphism
+  , functorMonoid
+  , semanticMonoid
+  , semanticFunctor
+  , semanticApplicative
   )
   where
 
 import Data.Monoid
 import Control.Applicative
 import Control.Monad (join)
+import Control.Arrow (first)
 import Test.QuickCheck
 import Text.Show.Functions ()
 
@@ -51,6 +56,37 @@ monoidMorphism :: (Monoid a, Monoid b, EqProp b, Show a, Arbitrary a) =>
                   (a -> b) -> TestBatch
 monoidMorphism q = ("monoid morphism", homomorphism monoidD monoidD q)
 
+functorMonoid :: forall m a b.
+  ( Functor m
+  , Monoid (m a)
+  , Monoid (m b)
+  , Arbitrary (a->b)
+  , Arbitrary (m a)
+  , Show (m a)
+  , EqProp (m b)) =>
+  m (a,b) -> TestBatch
+functorMonoid = const ("functor-monoid"
+                      , [ ( "identity",property identityP )
+                        , ( "binop", property binopP )
+                        ]
+                      )
+  where
+    identityP :: (a->b) -> Property
+    identityP f = (fmap f) (mempty :: m a) =-= (mempty :: m b)
+    binopP :: (a->b) -> (m a) -> (m a) -> Property
+    binopP f u v = (fmap f) (u `mappend` v) =-= (fmap f u) `mappend` (fmap f v)
+
+semanticMonoid :: forall a b.
+  ( Model a b
+  , Monoid a
+  , Monoid b
+  , Show a
+  , Arbitrary a
+  , EqProp b
+  ) =>
+  a -> TestBatch
+semanticMonoid = const (first (const "semantic-monoid")
+                              (monoidMorphism (model:: a -> b)))
 
 -- | Properties to check that the 'Functor' @m@ satisfies the functor
 -- properties.
@@ -91,6 +127,35 @@ functorMorphism q = ("functor morphism", [("fmap", property fmapP)])
    -- fmapP h l = q (fmap h l) =-= fmap h (q l)
    fmapP :: (X -> Y) -> Property
    fmapP h = q . fmap h =-= fmap h . q
+
+semanticFunctor :: forall f g.
+  ( Model (f X) (g X)
+  , Model (f Y) (g Y)
+  , Functor f
+  , Functor g
+  , EqProp (g Y)
+  , Show (f X)
+  , Arbitrary (f X)
+  ) =>
+  f X -> TestBatch
+semanticFunctor = const ("semantic-functor", [("fmap", property fmapP)])
+  where
+    fmapP :: (X -> Y) -> f X -> Property
+    fmapP h l = model (fmap h l) =-= fmap h ((model :: f X -> g X) l)
+
+-- Alternate definition? I couldn't get the types to work out here. I'm not
+-- sure why. -DJS
+--
+-- semanticFunctor :: forall f g a.
+--   ( Model (f a) (g a)
+--   , Functor f
+--   , Functor g
+--   , Arbitrary (f X)
+--   , Show (f X)
+--   , EqProp (g Y)
+--   ) =>
+--   f X -> TestBatch
+-- semanticFunctor = const (functorMorphism (model::forall b. f b -> g b))
 
 -- Note: monomorphism prevent us from saying @commutes (.) q (fmap h)@,
 -- since @fmap h@ is used at two different types.
@@ -142,6 +207,24 @@ applicativeMorphism q =
    
    pureP a = q (pure a) =-= pure a
    applyP mf mx = q (mf <*> mx) =-= (q mf <*> q mx)
+
+semanticApplicative :: forall f g.
+                       ( Applicative f, Applicative g
+                       , Model (f X) (g X)
+                       , Model (f (X->Y)) (g (X->Y))
+                       , Model (f Y) (g Y)
+                       , Show (f X), Arbitrary (f X), EqProp (g X), EqProp (g Y)
+                       , Show (f (X -> Y)), Arbitrary (f (X -> Y))) =>
+                       f X -> TestBatch
+semanticApplicative = const
+  ( "semantic-applicative"
+  , [("pure", property pureP), ("apply", property applyP)] )
+ where
+   pureP  :: X -> Property
+   applyP :: f (X->Y) -> f X -> Property
+   
+   pureP a = (model:: f X -> g X)(pure a) =-= pure a
+   applyP mf mx = model (mf <*> mx) =-= (model mf <*> model mx)
 
 
 -- | Properties to check that the 'Monad' @m@ satisfies the monad properties
