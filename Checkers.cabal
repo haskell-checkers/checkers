@@ -32,14 +32,18 @@ Library
   Build-Depends:       base, random, QuickCheck < 2.0, array >= 0.1
   Exposed-Modules:     
                        Test.QuickCheck.Help
+                       Test.QuickCheck.Applicative
                        Test.QuickCheck.Classes
                        Test.QuickCheck.Bottoms
                        Test.QuickCheck.Instances
                        Test.QuickCheck.Instances.Array
                        Test.QuickCheck.Instances.Char
+                       Test.QuickCheck.Instances.Eq
                        Test.QuickCheck.Instances.Int
                        Test.QuickCheck.Instances.List
                        Test.QuickCheck.Instances.Maybe
+                       Test.QuickCheck.Instances.Num
+                       Test.QuickCheck.Instances.Ord
                        Test.QuickCheck.Instances.Tuple
                        Test.QuickCheck.Instances.Word
                        Test.QuickCheck.Later

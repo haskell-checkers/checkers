@@ -32,7 +32,6 @@ module Test.QuickCheck.Help
   , meq, meq1, meq2, meq3, meq4, meq5
   -- * Some handy testing types
   , Positive, NonZero(..), NonNegative(..)
-  , increasing, nondecreasing
   , suchThat, suchThatMaybe
   , arbs, gens
   , (.&.)
@@ -42,15 +41,15 @@ module Test.QuickCheck.Help
 -- import Data.Function (on)
 import Data.Monoid
 import Control.Applicative
-import Control.Monad (ap)
 import Control.Monad.Extensions
 import Control.Arrow ((***),first)
 import Data.List (foldl')
 import Test.QuickCheck
+import Test.QuickCheck.Applicative ()
 import Test.QuickCheck.Utils
+import Test.QuickCheck.Instances.Num
 import System.Random
 
-import Test.QuickCheck.Instances.List
 
 -- import qualified Data.Stream as S
 
@@ -58,9 +57,6 @@ import Test.QuickCheck.Instances.List
 {----------------------------------------------------------
     Misc
 ----------------------------------------------------------}
-
-instance Applicative Gen where { pure = return ; (<*>) = ap }
-
 
 -- | Named test
 type Test = (String,Property)
@@ -337,41 +333,16 @@ instance (Num a, Arbitrary a) => Arbitrary (NonZero a) where
 newtype NonNegative a = NonNegative { unNonNegative :: a }
  deriving ( Eq, Ord, Num, Integral, Real, Enum, Show, Read )
 
-nonnegative :: (Num a, Arbitrary a) => Gen a
-nonnegative = frequency
-               [ (5, abs <$> arbitrary)
-               , (1, return 0)
-               ]
-
-positive :: (Num a, Arbitrary a) => Gen a
-positive = ((1+).abs) <$> arbitrary
-
-
 instance (Num a, Arbitrary a) => Arbitrary (NonNegative a) where
-  arbitrary   = nonnegative
+  arbitrary   = nonNegative
   coarbitrary = coarbitrary . unNonNegative
 
-sumA :: (Applicative f, Num a) => f a -> f [a] -> f [a]
-sumA = liftA2 (scanl (+))
-
-monotonic :: (Arbitrary a, Num a) => Gen a -> Gen [a]
-monotonic gen = sumA arbitrary (anyList gen)
-
--- | Generate increasing values
-increasing :: (Arbitrary a, Num a) => Gen [a]
-increasing = monotonic positive
-
--- | Generate nondecreasing values
-nondecreasing :: (Arbitrary a, Num a) => Gen [a]
-nondecreasing = monotonic nonnegative
+arbitrarySatisfying :: Arbitrary a => (a -> Bool) -> Gen a
+arbitrarySatisfying = (arbitrary `suchThat`)
 
 -- | Generates a value that satisfies a predicate.
 suchThat :: Gen a -> (a -> Bool) -> Gen a
-gen `suchThat` p =
-  do mx <- gen `suchThatMaybe` p
-     case mx of
-       Just x  -> return x
-       Nothing -> sized (\n -> resize (n+1) (gen `suchThat` p))
+gen `suchThat` p = satisfiesM p gen
 
 -- | Tries to generate a value that satisfies a predicate.
 suchThatMaybe :: Gen a -> (a -> Bool) -> Gen (Maybe a)
@@ -389,9 +360,6 @@ arbs n = fmap (\ rnd -> generate n rnd (vector n)) newStdGen
 gens :: Int -> Gen a -> IO [a]
 gens n gen =
   fmap (\ rnd -> generate 1000 rnd (sequence (replicate n gen))) newStdGen
-
-arbitrarySatisfying :: Arbitrary a => (a -> Bool) -> Gen a
-arbitrarySatisfying = flip satisfiesM arbitrary
 
 -- The next two are from twanvl:
 

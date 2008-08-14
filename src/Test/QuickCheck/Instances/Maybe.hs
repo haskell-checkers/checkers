@@ -1,9 +1,9 @@
 module Test.QuickCheck.Instances.Maybe where
 
 import Test.QuickCheck
-import Control.Monad
+import Test.QuickCheck.Applicative ()
 import Control.Applicative
 
 maybeGen :: Gen a -> Gen (Maybe a)
-maybeGen x = oneof [return Nothing
+maybeGen x = oneof [pure Nothing
                    ,Just <$> x]

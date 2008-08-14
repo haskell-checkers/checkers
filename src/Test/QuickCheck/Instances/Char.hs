@@ -8,7 +8,6 @@ module Test.QuickCheck.Instances.Char
 import Data.Char
 import Test.QuickCheck
 import Test.QuickCheck.Instances.Eq
-import Control.Monad
 
 instance Arbitrary Char where
     arbitrary   = choose ('\0','\255')
