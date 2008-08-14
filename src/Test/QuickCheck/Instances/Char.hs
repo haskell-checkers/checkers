@@ -11,8 +11,8 @@ import Test.QuickCheck.Instances.Eq
 import Control.Monad
 
 instance Arbitrary Char where
-    arbitrary     = choose ('\0','\255')
-    coarbitrary c = variant (ord c `rem` 4)
+    arbitrary   = choose ('\0','\255')
+    coarbitrary = variant . ord
 
 -- Bob: why the `rem` 4 ?
 
