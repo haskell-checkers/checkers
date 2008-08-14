@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances
            , FlexibleContexts, TypeSynonymInstances, GeneralizedNewtypeDeriving
-           , UndecidableInstances
+           , UndecidableInstances, ScopedTypeVariables
   #-}
 {-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
 
@@ -30,6 +30,7 @@ module Test.QuickCheck.Help
   -- * Model-based (semantics-based) testing
   , Model(..)
   , meq, meq1, meq2, meq3, meq4, meq5
+  , Model1(..)
   -- * Some handy testing types
   , Positive, NonZero(..), NonNegative(..)
   , suchThat, suchThatMaybe
@@ -41,14 +42,15 @@ module Test.QuickCheck.Help
 -- import Data.Function (on)
 import Data.Monoid
 import Control.Applicative
-import Control.Monad.Extensions
 import Control.Arrow ((***),first)
 import Data.List (foldl')
-import Test.QuickCheck
-import Test.QuickCheck.Applicative ()
-import Test.QuickCheck.Utils
-import Test.QuickCheck.Instances.Num
 import System.Random
+import Test.QuickCheck
+
+import Test.QuickCheck.Utils
+import Test.QuickCheck.Applicative ()
+import Test.QuickCheck.Instances.Num
+import Control.Monad.Extensions
 
 
 -- import qualified Data.Stream as S
@@ -300,8 +302,8 @@ meq5 f g = \a b c d e ->
 
 ---- Some model instances
 
-instance Model Bool  Bool    where model = id
-instance Model Char  Char    where model = id
+instance Model Bool   Bool   where model = id
+instance Model Char   Char   where model = id
 instance Model Int    Int    where model = id
 instance Model Float  Float  where model = id
 instance Model Double Double where model = id
@@ -313,6 +315,11 @@ instance (Model a b, Model a' b') => Model (a,a') (b,b') where
 
 -- instance Model (S.Stream a) (NonNegative Int -> a) where
 --   model s (NonNegative i) = s S.!! i
+
+
+-- | Like 'Model' but for unary type constructors.
+class Model1 f g | f -> g where
+  model1 :: forall a. f a -> g a
 
 
 {----------------------------------------------------------

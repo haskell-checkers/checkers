@@ -17,14 +17,10 @@
 
 module Test.QuickCheck.Classes
   (
-    monoid, monoidMorphism
-  , functor, functorMorphism
-  , applicative, applicativeMorphism
-  , monad, monadMorphism
-  , functorMonoid
-  , semanticMonoid
-  , semanticFunctor
-  , semanticApplicative
+    monoid, monoidMorphism, semanticMonoid
+  , functor, functorMorphism, semanticFunctor, functorMonoid
+  , applicative, applicativeMorphism, semanticApplicative
+  , monad, monadMorphism, semanticMonad
   )
   where
 
@@ -56,6 +52,18 @@ monoidMorphism :: (Monoid a, Monoid b, EqProp b, Show a, Arbitrary a) =>
                   (a -> b) -> TestBatch
 monoidMorphism q = ("monoid morphism", homomorphism monoidD monoidD q)
 
+semanticMonoid :: forall a b.
+  ( Model a b
+  , Monoid a
+  , Monoid b
+  , Show a
+  , Arbitrary a
+  , EqProp b
+  ) =>
+  a -> TestBatch
+semanticMonoid = const (first ("semantic " ++)
+                              (monoidMorphism (model:: a -> b)))
+
 functorMonoid :: forall m a b.
   ( Functor m
   , Monoid (m a)
@@ -80,18 +88,6 @@ functorMonoid = const ("functor-monoid"
 --         their own functions. I'm not too thrilled with that implementation, but it works.
 
 -- TODO: figure out out to eliminate the redundancy.
-
-semanticMonoid :: forall a b.
-  ( Model a b
-  , Monoid a
-  , Monoid b
-  , Show a
-  , Arbitrary a
-  , EqProp b
-  ) =>
-  a -> TestBatch
-semanticMonoid = const (first (const "semantic-monoid")
-                              (monoidMorphism (model:: a -> b)))
 
 -- | Properties to check that the 'Functor' @m@ satisfies the functor
 -- properties.
@@ -133,37 +129,20 @@ functorMorphism q = ("functor morphism", [("fmap", property fmapP)])
    fmapP :: (X -> Y) -> Property
    fmapP h = q . fmap h =-= fmap h . q
 
-semanticFunctor :: forall f g.
-  ( Model (f X) (g X)
-  , Model (f Y) (g Y)
-  , Functor f
-  , Functor g
-  , EqProp (g Y)
-  , Show (f X)
-  , Arbitrary (f X)
-  ) =>
-  f X -> TestBatch
-semanticFunctor = const ("semantic-functor", [("fmap", property fmapP)])
-  where
-    fmapP :: (X -> Y) -> f X -> Property
-    fmapP h l = model (fmap h l) =-= fmap h ((model :: f X -> g X) l)
-
--- Alternate definition? I couldn't get the types to work out here. I'm not
--- sure why. -DJS
---
--- semanticFunctor :: forall f g a.
---   ( Model (f a) (g a)
---   , Functor f
---   , Functor g
---   , Arbitrary (f X)
---   , Show (f X)
---   , EqProp (g Y)
---   ) =>
---   f X -> TestBatch
--- semanticFunctor = const (functorMorphism (model::forall b. f b -> g b))
-
 -- Note: monomorphism prevent us from saying @commutes (.) q (fmap h)@,
 -- since @fmap h@ is used at two different types.
+
+semanticFunctor :: forall f g.
+  ( Model1 f g
+  , Functor f
+  , Functor g
+  , Arbitrary (f X)
+  , Show (f X)
+  , EqProp (g Y)
+  ) =>
+  f () -> TestBatch
+semanticFunctor = const (functorMorphism (model1 :: forall b. f b -> g b))
+
 
 -- | Properties to check that the 'Applicative' @m@ satisfies the monad properties
 applicative :: forall m a b c.
@@ -213,23 +192,16 @@ applicativeMorphism q =
    pureP a = q (pure a) =-= pure a
    applyP mf mx = q (mf <*> mx) =-= (q mf <*> q mx)
 
+
 semanticApplicative :: forall f g.
-                       ( Applicative f, Applicative g
-                       , Model (f X) (g X)
-                       , Model (f (X->Y)) (g (X->Y))
-                       , Model (f Y) (g Y)
-                       , Show (f X), Arbitrary (f X), EqProp (g X), EqProp (g Y)
-                       , Show (f (X -> Y)), Arbitrary (f (X -> Y))) =>
-                       f X -> TestBatch
-semanticApplicative = const
-  ( "semantic-applicative"
-  , [("pure", property pureP), ("apply", property applyP)] )
- where
-   pureP  :: X -> Property
-   applyP :: f (X->Y) -> f X -> Property
-   
-   pureP a = (model:: f X -> g X) (pure a) =-= pure a
-   applyP mf mx = model (mf <*> mx) =-= (model mf <*> model mx)
+  ( Model1 f g
+  , Applicative f, Applicative g
+  , Arbitrary (f X), Arbitrary (f (X -> Y))
+  , EqProp (g X), EqProp (g Y)
+  , Show (f X), Show (f (X -> Y))
+  ) =>
+  f () -> TestBatch
+semanticApplicative = const (applicativeMorphism (model1 :: forall b. f b -> g b))
 
 
 -- | Properties to check that the 'Monad' @m@ satisfies the monad properties
@@ -295,3 +267,15 @@ monadMorphism q =
 --   == ???
 
 -- I'm stuck at the end here.  What's missing?
+
+semanticMonad :: forall f g.
+  ( Model1 f g
+  , Monad f, Monad g
+  , EqProp (g Y) , EqProp (g X), EqProp (g (X -> Y))
+  , Arbitrary (f Y) , Arbitrary (f X)
+  , Arbitrary (f (f (X -> Y))) , Arbitrary (f (X -> Y))
+  , Show (f (f (X -> Y))) , Show (f (X -> Y)) , Show (f X)
+  , Functor g
+  ) =>
+  f () -> TestBatch
+semanticMonad = const (monadMorphism (model1 :: forall b. f b -> g b))

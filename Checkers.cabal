@@ -47,6 +47,8 @@ Library
                        Test.QuickCheck.Instances.Tuple
                        Test.QuickCheck.Instances.Word
                        Test.QuickCheck.Later
+  Other-modules:
+                       Control.Monad.Extensions
   ghc-options:         -Wall -fno-warn-orphans
 
 --  ghc-prof-options:    -prof -auto-all 
