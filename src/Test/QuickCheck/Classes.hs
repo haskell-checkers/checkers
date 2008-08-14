@@ -76,6 +76,11 @@ functorMonoid = const ("functor-monoid"
     binopP :: (a->b) -> (m a) -> (m a) -> Property
     binopP f u v = (fmap f) (u `mappend` v) =-= (fmap f u) `mappend` (fmap f v)
 
+-- <camio> There I have an attempt at doing this. I eventually implemented those semanticMorphisms as
+--         their own functions. I'm not too thrilled with that implementation, but it works.
+
+-- TODO: figure out out to eliminate the redundancy.
+
 semanticMonoid :: forall a b.
   ( Model a b
   , Monoid a
