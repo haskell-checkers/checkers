@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      :  Data.Later
@@ -25,25 +26,27 @@ import System.Random       ()
 import System.IO.Unsafe
 import Control.Concurrent
 
-isCommutTimes (**) =
-  forAll (genR (1,100)) $ \t1 ->
-  forAll (genR (1,100)) $ \t2 ->
-  forAll (arbitrary) $ \v ->
+isCommutTimes :: (EqProp a1, Arbitrary a, Show a) => (a -> a -> a1) -> Property
+isCommutTimes (#) =
+  forAll (genR (1,100)) $ \ t1 ->
+  forAll (genR (1,100)) $ \ t2 ->
+  forAll (arbitrary) $ \ v ->
   let v1 = (delay v t1)
       v2 = (delay v t2)
   in
-    v1 ** v2 =-= v2 ** v1
+    v1 # v2 =-= v2 # v1
 
-isAssocTimes (**) =
-  forAll (genR (1,100)) $ \t1 ->
-  forAll (genR (1,100)) $ \t2 ->
-  forAll (genR (1,100)) $ \t3 ->
-  forAll (arbitrary) $ \v ->
+isAssocTimes :: (EqProp a, Arbitrary a, Show a) => (a -> a -> a) -> Property
+isAssocTimes (#) =
+  forAll (genR (1,100)) $ \ t1 ->
+  forAll (genR (1,100)) $ \ t2 ->
+  forAll (genR (1,100)) $ \ t3 ->
+  forAll (arbitrary) $ \ v ->
   let v1 = (delay v t1)
       v2 = (delay v t2)
       v3 = (delay v t3)
   in
-    (v1 ** v2) ** v3 =-= v1 ** (v2 ** v3)
+    (v1 # v2) # v3 =-= v1 # (v2 # v3)
 
 delay :: a ->
          Int -> -- milliseconds

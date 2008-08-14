@@ -223,7 +223,7 @@ semanticApplicative = const
    pureP  :: X -> Property
    applyP :: f (X->Y) -> f X -> Property
    
-   pureP a = (model:: f X -> g X)(pure a) =-= pure a
+   pureP a = (model:: f X -> g X) (pure a) =-= pure a
    applyP mf mx = model (mf <*> mx) =-= (model mf <*> model mx)
 
 
