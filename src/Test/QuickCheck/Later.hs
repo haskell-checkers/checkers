@@ -15,6 +15,8 @@
 module Test.QuickCheck.Later
   ( isAssocTimes
   , isCommutTimes
+  , delay
+  , delayForever
   ) where
 
 import Test.QuickCheck.Help
@@ -25,6 +27,7 @@ import System.Random       ()
 
 import System.IO.Unsafe
 import Control.Concurrent
+import Control.Monad(forever)
 
 isCommutTimes :: (EqProp a1, Arbitrary a, Show a) => (a -> a -> a1) -> Property
 isCommutTimes (#) =
@@ -57,3 +60,7 @@ delay i d = unsafePerformIO $ do
             threadDelay (d*1000)
             putMVar v i
   takeMVar v
+
+delayForever :: a
+delayForever = unsafePerformIO $ do forever (threadDelay maxBound)
+                                    return undefined
