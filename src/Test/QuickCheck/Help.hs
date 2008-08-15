@@ -162,6 +162,7 @@ instance         EqProp Char   where (=-=) = eq
 instance         EqProp Int    where (=-=) = eq
 instance         EqProp Double where (=-=) = eq
 instance Eq a => EqProp [a]    where (=-=) = eq
+instance Eq a => EqProp (Maybe a)    where (=-=) = eq
 
 -- Pairing
 instance (EqProp a, EqProp b) => EqProp (a,b) where
