@@ -1,6 +1,7 @@
 module Test.QuickCheck.Instances.Num 
        (nonNegative,nonPositive
        ,negative,positive
+       ,nonZero,nonZero_
        ) where
 
 import Test.QuickCheck
@@ -21,3 +22,6 @@ negative = negate <$> positive
 
 nonZero :: (Num a, Arbitrary a) => Gen a -> Gen a
 nonZero = satisfiesM (/= 0)
+
+nonZero_ :: (Num a, Arbitrary a) => Gen a
+nonZero_ = nonZero arbitrary
