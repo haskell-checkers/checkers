@@ -1,4 +1,4 @@
-module Control.Monad.Extensions (satisfiesM) where
+module Control.Monad.Extensions (satisfiesM,if') where
 
 import Control.Applicative
 import Control.Monad

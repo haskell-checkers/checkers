@@ -21,7 +21,8 @@ negative :: (Num a, Arbitrary a) => Gen a
 negative = negate <$> positive
 
 nonZero :: (Num a, Arbitrary a) => Gen a -> Gen a
-nonZero = satisfiesM (/= 0)
+nonZero g =
+  sized (\s -> satisfiesM (/= 0) (if (s == 0) then (resize 1 g) else g))
 
 nonZero_ :: (Num a, Arbitrary a) => Gen a
 nonZero_ = nonZero arbitrary
