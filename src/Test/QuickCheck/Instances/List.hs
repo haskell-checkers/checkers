@@ -3,6 +3,7 @@ module Test.QuickCheck.Instances.List
        ,infiniteList
        ,increasing,nondecreasing
        ,increasingInf
+       ,nondecreasingInf
        ) where
 
 import Test.QuickCheck
@@ -49,3 +50,6 @@ increasing = monotonic positive
 -- | Generate nondecreasing values
 nondecreasing :: (Arbitrary a, Num a) => Gen [a]
 nondecreasing = monotonic nonNegative
+
+nondecreasingInf :: (Arbitrary a, Num a) => Gen [a]
+nondecreasingInf = monotonic_ infiniteList nonNegative
