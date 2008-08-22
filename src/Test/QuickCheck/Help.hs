@@ -20,6 +20,7 @@ module Test.QuickCheck.Help
   (
   -- * Misc
     Test, TestBatch, unbatch, checkBatch, quickBatch, verboseBatch
+  , probablisticPureCheck
   , Unop, Binop, X, Y, genR, inverseL, inverse
   -- * Generalized equality
   , EqProp(..), eq
@@ -46,6 +47,7 @@ import Control.Arrow ((***),first)
 import Data.List (foldl')
 import System.Random
 import Test.QuickCheck
+import System.IO.Unsafe
 
 import Test.QuickCheck.Utils
 import Test.QuickCheck.Applicative ()
@@ -383,3 +385,32 @@ instance Testable a => Testable [a] where
 
 instance (Testable a, Testable b) => Testable (a,b) where
   property = uncurry (.&.)
+
+probablisticPureCheck :: Testable a => Config -> a -> Bool
+probablisticPureCheck config a = unsafePerformIO $
+  do rnd <- newStdGen
+     probablisticPureTests config (evaluate a) rnd 0 0 []
+
+probablisticPureTests :: Config
+                      -> Gen Result
+                      -> StdGen
+                      -> Int
+                      -> Int
+                      -> [[String]]
+                      -> IO Bool
+probablisticPureTests config gen rnd0 ntest nfail stamps
+  | ntest == configMaxTest config = return True
+  | nfail == configMaxFail config = return True
+  | otherwise                     =
+      do putStr (configEvery config ntest (arguments result))
+         case ok result of
+           Nothing    ->
+             probablisticPureTests config gen rnd1 ntest (nfail+1) stamps
+           Just True  ->
+             probablisticPureTests config gen rnd1 (ntest+1) nfail
+                                   (stamp result:stamps)
+           Just False ->
+             return False
+     where
+      result      = generate (configSize config ntest) rnd2 gen
+      (rnd1,rnd2) = split rnd0
