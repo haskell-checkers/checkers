@@ -31,6 +31,7 @@ module Test.QuickCheck.Help
   -- * Model-based (semantics-based) testing
   , Model(..)
   , meq, meq1, meq2, meq3, meq4, meq5
+  , eqModels
   , Model1(..)
   -- * Some handy testing types
   , Positive, NonZero(..), NonNegative(..)
@@ -42,6 +43,7 @@ module Test.QuickCheck.Help
 
 -- import Data.Function (on)
 import Data.Monoid
+import Data.Function (on)
 import Control.Applicative
 import Control.Arrow ((***),first)
 import Data.List (foldl')
@@ -159,12 +161,12 @@ a `eq` a' = property (a == a')
 --   instance EqProp a where (=-=) = eq
 -- E.g.,
 
-instance         EqProp Bool   where (=-=) = eq
-instance         EqProp Char   where (=-=) = eq
-instance         EqProp Int    where (=-=) = eq
-instance         EqProp Double where (=-=) = eq
-instance Eq a => EqProp [a]    where (=-=) = eq
-instance Eq a => EqProp (Maybe a)    where (=-=) = eq
+instance         EqProp Bool      where (=-=) = eq
+instance         EqProp Char      where (=-=) = eq
+instance         EqProp Int       where (=-=) = eq
+instance         EqProp Double    where (=-=) = eq
+instance Eq a => EqProp [a]       where (=-=) = eq
+instance Eq a => EqProp (Maybe a) where (=-=) = eq
 
 -- Pairing
 instance (EqProp a, EqProp b) => EqProp (a,b) where
@@ -173,9 +175,16 @@ instance (EqProp a, EqProp b) => EqProp (a,b) where
 -- Function equality
 instance (Show a, Arbitrary a, EqProp b) => EqProp (a -> b) where
   f =-= f' = property (liftA2 (=-=) f f')
+-- Alternative definition:
+-- instance (Show a, Arbitrary a, EqProp b) => EqProp (a -> b) where
+--   f =-= f' = property (probablisticPureCheck defaultConfig
+--                                              (\x -> f x =-= g x))
+
+eqModels :: (Model a b, EqProp b) => a -> a -> Property
+eqModels = (=-=) `on` model
 
 -- Other types
--- instance EqProp a => EqProp (S.Stream a) where (=-=) = (=-=) `on` model
+-- instance EqProp a => EqProp (S.Stream a) where (=-=) = eqModels
 
 
 -- | Has a given left identity, according to '(=-=)'
@@ -402,15 +411,14 @@ probablisticPureTests config gen rnd0 ntest nfail stamps
   | ntest == configMaxTest config = return True
   | nfail == configMaxFail config = return True
   | otherwise                     =
-      do putStr (configEvery config ntest (arguments result))
-         case ok result of
-           Nothing    ->
-             probablisticPureTests config gen rnd1 ntest (nfail+1) stamps
-           Just True  ->
-             probablisticPureTests config gen rnd1 (ntest+1) nfail
-                                   (stamp result:stamps)
-           Just False ->
-             return False
+      case ok result of
+        Nothing    ->
+          probablisticPureTests config gen rnd1 ntest (nfail+1) stamps
+        Just True  ->
+          probablisticPureTests config gen rnd1 (ntest+1) nfail
+                                (stamp result:stamps)
+        Just False ->
+          return False
      where
       result      = generate (configSize config ntest) rnd2 gen
       (rnd1,rnd2) = split rnd0
