@@ -172,6 +172,12 @@ instance Eq a => EqProp (Maybe a) where (=-=) = eq
 instance (EqProp a, EqProp b) => EqProp (a,b) where
   (a,b) =-= (a',b') = a =-= a' .&. b =-= b'
 
+-- Either
+instance (EqProp a, EqProp b) => EqProp (Either a b) where
+  (Left x)  =-=  (Left x') = x =-= x'
+  (Right x) =-= (Right x') = x =-= x'
+  _         =-=          _ = property False
+
 -- Function equality
 instance (Show a, Arbitrary a, EqProp b) => EqProp (a -> b) where
   f =-= f' = property (liftA2 (=-=) f f')

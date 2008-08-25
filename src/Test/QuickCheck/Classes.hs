@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, KindSignatures
-           , Rank2Types
+           , Rank2Types, TypeOperators
   #-}
 
 {-# OPTIONS_GHC -Wall #-}
@@ -21,13 +21,14 @@ module Test.QuickCheck.Classes
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , applicative, applicativeMorphism, semanticApplicative
   , monad, monadMorphism, semanticMonad
+  , arrow, arrowChoice
   )
   where
 
 import Data.Monoid
 import Control.Applicative
 import Control.Monad (join)
-import Control.Arrow (first)
+import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
 import Test.QuickCheck
 import Text.Show.Functions ()
 
@@ -279,3 +280,74 @@ semanticMonad :: forall f g.
   ) =>
   f () -> TestBatch
 semanticMonad = const (monadMorphism (model1 :: forall b. f b -> g b))
+
+arrow :: forall (~>) b c d e.
+         ( Arrow (~>)
+         , Show (d ~> e), Show (c ~> d), Show (b ~> c)
+         , Show b, Show c, Show d, Show e
+         , Arbitrary (d ~> e), Arbitrary (c ~> d), Arbitrary (b ~> c)
+         , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
+         , EqProp (b ~> e), EqProp (b ~> d)
+         , EqProp ((b,d) ~> c)
+         , EqProp ((b,d) ~> (c,d)), EqProp ((b,e) ~> (d,e))
+         , EqProp ((b,d) ~> (c,e))
+         , EqProp b, EqProp c, EqProp d, EqProp e
+         ) =>
+         b ~> (c,d,e) -> TestBatch
+arrow = const ("arrow laws"
+              , [ ("associativity"           , property assocP)
+                , ("arr distributes"         , property arrDistributesP)
+-- TODO: how to define h is onto or one-to-one?
+--                , ("extensionality principle"     , property extensionalityP)
+--                , ("extensionality dual"          , property extensionalityDualP)
+                 , ("first works as funs"    , property firstAsFunP)
+                 , ("first keeps composition", property firstKeepCompP)
+                 , ("first works as fst"     , property firstIsFstP)
+                 , ("second can move"        , property secondMovesP)
+                 ]
+              )
+  where
+    assocP :: b ~> c -> c ~> d -> d ~> e -> Property
+    assocP f g h = ((f >>> g) >>> h) =-= (f >>> (g >>> h))
+    
+    arrDistributesP :: (b -> c) -> (c -> d) -> Property
+    arrDistributesP f g = ((arr (f >>> g)) :: b ~> d) =-= (arr f >>> arr g)
+    
+    firstAsFunP :: (b -> c) -> Property
+    firstAsFunP f = (first (arr f) :: (b,d) ~> (c,d)) =-= arr (first f)
+
+    firstKeepCompP :: b ~> c -> c ~> d -> Property
+    firstKeepCompP f g =
+      ((first (f >>> g)) :: ((b,e) ~> (d,e))) =-= (first f >>> first g)
+ 
+    firstIsFstP :: b ~> c -> Property
+    firstIsFstP f = ((first f :: (b,d) ~> (c,d)) >>> arr fst)
+                      =-= (arr fst >>> f)
+    
+    secondMovesP :: (b ~> c) -> (d -> e) -> Property
+    secondMovesP f g = (first f >>> second (arr g))
+                         =-= ((second (arr g)) >>> first f)
+
+arrowChoice :: forall (~>) b c d e.
+               ( ArrowChoice (~>)
+               , Show (b ~> c)
+               , Arbitrary (b ~> c)
+               , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
+               , EqProp ((Either b d) ~> (Either c e))
+               , EqProp ((Either b d) ~> (Either c d))
+               ) =>
+               b ~> (c,d,e) -> TestBatch
+arrowChoice = const ("arrow choice laws"
+                    , [ ("left works as funs"     , property leftAsFunP)
+                      , ("right can move"         , property rightMovesP)
+                      ]
+                    )
+  where
+    leftAsFunP :: (b -> c) -> Property
+    leftAsFunP f = (left (arr f) :: (Either b d) ~> (Either c d))
+                     =-= arr (left f)
+
+    rightMovesP :: (b ~> c) -> (d -> e) -> Property
+    rightMovesP f g = (left f >>> right (arr g))
+                        =-= ((right (arr g)) >>> left f)
+
