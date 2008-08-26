@@ -85,8 +85,9 @@ functorMonoid = const ("functor-monoid"
     binopP :: (a->b) -> (m a) -> (m a) -> Property
     binopP f u v = (fmap f) (u `mappend` v) =-= (fmap f u) `mappend` (fmap f v)
 
--- <camio> There I have an attempt at doing this. I eventually implemented those semanticMorphisms as
---         their own functions. I'm not too thrilled with that implementation, but it works.
+-- <camio> There I have an attempt at doing this. I eventually implemented 
+-- those semanticMorphisms as their own functions. I'm not too thrilled with
+-- that implementation, but it works.
 
 -- TODO: figure out out to eliminate the redundancy.
 
@@ -120,14 +121,15 @@ functor = const ( "functor"
 -- | 'Functor' morphism (natural transformation) properties
 functorMorphism :: forall f g.
                    ( Functor f, Functor g
-                   , Arbitrary (f X), Show (f X), EqProp (g Y)
+                   , Arbitrary (f NumericType), Show (f NumericType)
+                   , EqProp (g NoPropertyType)
                    ) =>
                   (forall a. f a -> g a) -> TestBatch
 functorMorphism q = ("functor morphism", [("fmap", property fmapP)])
  where
-   -- fmapP :: (X -> Y) -> f X -> Property
+   -- fmapP :: (NumericType -> NoPropertyType) -> f NumericType -> Property
    -- fmapP h l = q (fmap h l) =-= fmap h (q l)
-   fmapP :: (X -> Y) -> Property
+   fmapP :: (NumericType -> NoPropertyType) -> Property
    fmapP h = q . fmap h =-= fmap h . q
 
 -- Note: monomorphism prevent us from saying @commutes (.) q (fmap h)@,
@@ -137,15 +139,16 @@ semanticFunctor :: forall f g.
   ( Model1 f g
   , Functor f
   , Functor g
-  , Arbitrary (f X)
-  , Show (f X)
-  , EqProp (g Y)
+  , Arbitrary (f NumericType)
+  , Show (f NumericType)
+  , EqProp (g NoPropertyType)
   ) =>
   f () -> TestBatch
 semanticFunctor = const (functorMorphism (model1 :: forall b. f b -> g b))
 
 
--- | Properties to check that the 'Applicative' @m@ satisfies the monad properties
+-- | Properties to check that the 'Applicative' @m@ satisfies the monad
+-- properties
 applicative :: forall m a b c.
                ( Applicative m
                , Arbitrary a, Arbitrary b, Arbitrary (m a)
@@ -180,15 +183,18 @@ applicative = const ( "applicative"
 -- | 'Applicative' morphism properties
 applicativeMorphism :: forall f g.
                        ( Applicative f, Applicative g
-                       , Show (f X), Arbitrary (f X), EqProp (g X), EqProp (g Y)
-                       , Show (f (X -> Y)), Arbitrary (f (X -> Y))) =>
+                       , Show (f NumericType), Arbitrary (f NumericType)
+                       , EqProp (g NumericType), EqProp (g NoPropertyType)
+                       , Show (f (NumericType -> NoPropertyType))
+                       , Arbitrary (f (NumericType -> NoPropertyType))
+                       ) =>
                        (forall a. f a -> g a) -> TestBatch
 applicativeMorphism q =
   ( "applicative morphism"
   , [("pure", property pureP), ("apply", property applyP)] )
  where
-   pureP  :: X -> Property
-   applyP :: f (X->Y) -> f X -> Property
+   pureP  :: NumericType -> Property
+   applyP :: f (NumericType->NoPropertyType) -> f NumericType -> Property
    
    pureP a = q (pure a) =-= pure a
    applyP mf mx = q (mf <*> mx) =-= (q mf <*> q mx)
@@ -197,12 +203,13 @@ applicativeMorphism q =
 semanticApplicative :: forall f g.
   ( Model1 f g
   , Applicative f, Applicative g
-  , Arbitrary (f X), Arbitrary (f (X -> Y))
-  , EqProp (g X), EqProp (g Y)
-  , Show (f X), Show (f (X -> Y))
+  , Arbitrary (f NumericType), Arbitrary (f (NumericType -> NoPropertyType))
+  , EqProp (g NumericType), EqProp (g NoPropertyType)
+  , Show (f NumericType), Show (f (NumericType -> NoPropertyType))
   ) =>
   f () -> TestBatch
-semanticApplicative = const (applicativeMorphism (model1 :: forall b. f b -> g b))
+semanticApplicative =
+  const (applicativeMorphism (model1 :: forall b. f b -> g b))
 
 
 -- | Properties to check that the 'Monad' @m@ satisfies the monad properties
@@ -234,19 +241,23 @@ monad = const ( "monad laws"
 -- | 'Applicative' morphism properties
 monadMorphism :: forall f g.
                  ( Monad f, Monad g, Functor g
-                 , Show (f X), Show (f (X -> Y)), Show (f (f (X -> Y)))
-                 , Arbitrary (f X), Arbitrary (f Y)
-                 , Arbitrary (f (X -> Y)) , Arbitrary (f (f (X -> Y)))
-                 , EqProp (g X), EqProp (g Y), EqProp (g (X -> Y))
+                 , Show (f NumericType)
+                 , Show (f (NumericType -> NoPropertyType))
+                 , Show (f (f (NumericType -> NoPropertyType)))
+                 , Arbitrary (f NumericType), Arbitrary (f NoPropertyType)
+                 , Arbitrary (f (NumericType -> NoPropertyType))
+                 , Arbitrary (f (f (NumericType -> NoPropertyType)))
+                 , EqProp (g NumericType), EqProp (g NoPropertyType)
+                 , EqProp (g (NumericType -> NoPropertyType))
                  ) =>
                 (forall a. f a -> g a) -> TestBatch
 monadMorphism q =
   ( "monad morphism"
   , [ ("return", property returnP), ("bind", property bindP), ("join", property joinP) ] )
  where
-   returnP :: X -> Property
-   bindP :: f X -> (X -> f Y) -> Property
-   joinP :: f (f (X->Y)) -> Property
+   returnP :: NumericType -> Property
+   bindP :: f NumericType -> (NumericType -> f NoPropertyType) -> Property
+   joinP :: f (f (NumericType->NoPropertyType)) -> Property
    
    returnP a = q (return a) =-= return a
    bindP u k = q (u >>= k)  =-= (q u >>= q . k)
@@ -272,10 +283,13 @@ monadMorphism q =
 semanticMonad :: forall f g.
   ( Model1 f g
   , Monad f, Monad g
-  , EqProp (g Y) , EqProp (g X), EqProp (g (X -> Y))
-  , Arbitrary (f Y) , Arbitrary (f X)
-  , Arbitrary (f (f (X -> Y))) , Arbitrary (f (X -> Y))
-  , Show (f (f (X -> Y))) , Show (f (X -> Y)) , Show (f X)
+  , EqProp (g NoPropertyType) , EqProp (g NumericType)
+  , EqProp (g (NumericType -> NoPropertyType))
+  , Arbitrary (f NoPropertyType) , Arbitrary (f NumericType)
+  , Arbitrary (f (f (NumericType -> NoPropertyType)))
+  , Arbitrary (f (NumericType -> NoPropertyType))
+  , Show (f (f (NumericType -> NoPropertyType)))
+  , Show (f (NumericType -> NoPropertyType)) , Show (f NumericType)
   , Functor g
   ) =>
   f () -> TestBatch

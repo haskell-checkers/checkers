@@ -21,7 +21,8 @@ module Test.QuickCheck.Help
   -- * Misc
     Test, TestBatch, unbatch, checkBatch, quickBatch, verboseBatch
   , probablisticPureCheck
-  , Unop, Binop, X, Y, genR, inverseL, inverse
+  , Unop, Binop, genR, inverseL, inverse
+  , FractionalType, NumericType, OrderableType, NoPropertyType
   -- * Generalized equality
   , EqProp(..), eq
   , leftId, rightId, bothId, isAssoc, isCommut, commutes
@@ -83,7 +84,7 @@ checkBatch config (name,tests) =
      mapM_ pr tests
  where
    pr (s,p) = do putStr (padTo (width + 4) ("  "++s ++ ":"))
-                 check config p
+                 catch (check config p) (\x -> putStrLn "Jam!")
    width    = foldl' max 0 (map (length.fst) tests)
 
 padTo :: Int -> String -> String
@@ -124,8 +125,10 @@ type Unop a = a -> a
 type Binop a = a -> a -> a
 
 -- Testing types
-type X = Int
-type Y = Char
+type FractionalType = Float
+type NumericType = Int
+type OrderableType = Char
+type NoPropertyType = Char
 
 genR :: Random a => (a, a) -> Gen a
 genR (lo,hi) = fmap (fst . randomR (lo,hi)) rand
