@@ -69,7 +69,6 @@ eventually = unsafePerformIO . unsafeInterleaveIO
 -- | Delay a value's availability by the given duration in seconds.
 -- Note that the delay happens only on the first evaluation.
 delay :: RealFrac t => t -> a -> a
-delay 0 i = i
 delay d a = eventually $ threadDelay (round (1.0e6 * d)) >> return a
 
 -- | A value that is never available.  Rerun of @hang@ from unamb, but
