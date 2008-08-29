@@ -10,6 +10,8 @@
 -- 
 -- Later. Allows for testing of functions that depend on the order of
 -- evaluation.
+--
+-- TODO: move this functionality to the testing package for Unamb.
 ----------------------------------------------------------------------
 
 module Test.QuickCheck.Later
@@ -22,45 +24,76 @@ module Test.QuickCheck.Later
 import Test.QuickCheck.Help
 import Test.QuickCheck
 
-import Control.Applicative ()
-import System.Random       ()
+import System.Random (Random)
 
 import System.IO.Unsafe
 import Control.Concurrent
-import Control.Monad(forever)
+import Control.Monad (forever)
 
-isCommutTimes :: (EqProp a1, Arbitrary a, Show a) => (a -> a -> a1) -> Property
-isCommutTimes (#) =
-  forAll (genR (1,100)) $ \ t1 ->
-  forAll (genR (1,100)) $ \ t2 ->
-  forAll (arbitrary) $ \ v ->
-  let v1 = (delay v t1)
-      v2 = (delay v t2)
+-- Generate a random delay up to given max seconds for a property.
+delayP :: (Num t, System.Random.Random t, Testable b) => t -> (t -> b) -> Property
+delayP d = forAll (genR (0,d))
+
+-- | Is the given function commutative when restricted to the same value
+-- but possibly different times?
+isCommutTimes :: (EqProp b, Arbitrary a, Show a) => Double -> (a -> a -> b) -> Property
+isCommutTimes d (#) =
+  delayP d $ \ t1 ->
+  delayP d $ \ t2 ->
+  \ v ->
+  let v1 = delay t1 v
+      v2 = delay t2 v
   in
     v1 # v2 =-= v2 # v1
 
-isAssocTimes :: (EqProp a, Arbitrary a, Show a) => (a -> a -> a) -> Property
-isAssocTimes (#) =
-  forAll (genR (1,100)) $ \ t1 ->
-  forAll (genR (1,100)) $ \ t2 ->
-  forAll (genR (1,100)) $ \ t3 ->
-  forAll (arbitrary) $ \ v ->
-  let v1 = (delay v t1)
-      v2 = (delay v t2)
-      v3 = (delay v t3)
+-- | Is the given function associative when restricted to the same value
+-- but possibly different times?
+isAssocTimes :: (EqProp a, Arbitrary a, Show a) => Double -> (a -> a -> a) -> Property
+isAssocTimes d (#) =
+  delayP d $ \ t1 ->
+  delayP d $ \ t2 ->
+  delayP d $ \ t3 ->
+  \ v ->
+  let v1 = delay t1 v
+      v2 = delay t2 v
+      v3 = delay t3 v
   in
     (v1 # v2) # v3 =-= v1 # (v2 # v3)
 
-delay :: a ->
-         Int -> -- milliseconds
-         a
-delay i d = unsafePerformIO $ do
-  v <- newEmptyMVar
-  forkIO $ do
-            threadDelay (d*1000)
-            putMVar v i
-  takeMVar v
+-- The value eventually returned by an action.  Probably handy elsewhere.
+-- TODO: what are the necessary preconditions in order to make this
+-- function referentially transparent?
+eventually :: IO a -> a
+eventually = unsafePerformIO . unsafeInterleaveIO
 
+-- Previous implementation:
+-- 
+-- eventually act =
+--   unsafePerformIO $ do v <- newEmptyMVar
+--                        forkIO (act >>= putMVar v)
+--                        takeMVar v
+
+-- | Delay a value's availability by the given duration in seconds.
+-- Note that the delay happens only on the first evaluation.
+delay :: RealFrac t => t -> a -> a
+delay 0 i = i
+delay d a = eventually $ threadDelay (round (1.0e6 * d)) >> return a
+
+-- TODO: Look for a way to reduce overhead.  Even when the intended delay
+-- is very small, the wait can be considerable.
+
+-- Previous version.  Delete after testing.
+-- delay i d = unsafePerformIO $ do
+--   v <- newEmptyMVar
+--   forkIO $ do
+--             threadDelay (d*1000)
+--             putMVar v i
+--   takeMVar v
+
+-- | A value that is never available.  Rerun of @hang@ from unamb, but
+-- replicated to avoid mutual dependency.
+-- 
+-- TODO: Remove when this module is moved into the unamb-test package.
 delayForever :: a
 delayForever = unsafePerformIO $ do forever (threadDelay maxBound)
                                     return undefined
