@@ -79,17 +79,6 @@ delay :: RealFrac t => t -> a -> a
 delay 0 i = i
 delay d a = eventually $ threadDelay (round (1.0e6 * d)) >> return a
 
--- TODO: Look for a way to reduce overhead.  Even when the intended delay
--- is very small, the wait can be considerable.
-
--- Previous version.  Delete after testing.
--- delay i d = unsafePerformIO $ do
---   v <- newEmptyMVar
---   forkIO $ do
---             threadDelay (d*1000)
---             putMVar v i
---   takeMVar v
-
 -- | A value that is never available.  Rerun of @hang@ from unamb, but
 -- replicated to avoid mutual dependency.
 -- 
