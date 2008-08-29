@@ -66,13 +66,6 @@ isAssocTimes d (#) =
 eventually :: IO a -> a
 eventually = unsafePerformIO . unsafeInterleaveIO
 
--- Previous implementation:
--- 
--- eventually act =
---   unsafePerformIO $ do v <- newEmptyMVar
---                        forkIO (act >>= putMVar v)
---                        takeMVar v
-
 -- | Delay a value's availability by the given duration in seconds.
 -- Note that the delay happens only on the first evaluation.
 delay :: RealFrac t => t -> a -> a
