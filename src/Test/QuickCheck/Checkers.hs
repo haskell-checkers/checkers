@@ -84,7 +84,7 @@ checkBatch config (name,tests) =
      mapM_ pr tests
  where
    pr (s,p) = do putStr (padTo (width + 4) ("  "++s ++ ":"))
-                 catch (check config p) (const $ putStrLn "Jam!")
+                 catch (check config p) print
    width    = foldl' max 0 (map (length.fst) tests)
 
 padTo :: Int -> String -> String

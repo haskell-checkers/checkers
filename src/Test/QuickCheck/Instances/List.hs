@@ -2,8 +2,9 @@ module Test.QuickCheck.Instances.List
        (anyList,nonEmpty
        ,infiniteList
        ,increasing,nondecreasing
-       ,increasingInf
-       ,nondecreasingInf
+       ,increasingInf,nondecreasingInf
+       ,decreasing,nonincreasing
+       ,decreasingInf,nonincreasingInf
        ) where
 
 import Test.QuickCheck
@@ -28,7 +29,6 @@ anyList x = frequency [(1, pure []), (4, nonEmpty x)]
 infiniteList :: Arbitrary a => Gen a -> Gen [a]
 infiniteList x = liftA2 (:) x (infiniteList x)
 
-
 sumA :: (Applicative f, Num a) => f a -> f [a] -> f [a]
 sumA = liftA2 (scanl (+))
 
@@ -39,17 +39,34 @@ monotonic_ listGen gen = sumA arbitrary (listGen gen)
 monotonic :: (Arbitrary a, Num a) => Gen a -> Gen [a]
 monotonic gen = monotonic_ anyList gen
 
--- | Generate an infinite list of increasing values
-increasingInf :: (Arbitrary a, Num a) => Gen [a]
-increasingInf = monotonic_ infiniteList positive
-
 -- | Generate increasing towards infinity
 increasing :: (Arbitrary a, Num a) => Gen [a]
 increasing = monotonic positive
+
+-- | Generate an infinite list of increasing values
+increasingInf :: (Arbitrary a, Num a) => Gen [a]
+increasingInf = monotonic_ infiniteList positive
 
 -- | Generate nondecreasing values
 nondecreasing :: (Arbitrary a, Num a) => Gen [a]
 nondecreasing = monotonic nonNegative
 
+-- | Generate an infinite list of nondecreasing values
 nondecreasingInf :: (Arbitrary a, Num a) => Gen [a]
 nondecreasingInf = monotonic_ infiniteList nonNegative
+
+-- | Generate increasing towards infinity
+decreasing :: (Arbitrary a, Num a) => Gen [a]
+decreasing = monotonic negative
+
+-- | Generate an infinite list of increasing values
+decreasingInf :: (Arbitrary a, Num a) => Gen [a]
+decreasingInf = monotonic_ infiniteList negative
+
+-- | Generate nondecreasing values
+nonincreasing :: (Arbitrary a, Num a) => Gen [a]
+nonincreasing = monotonic nonPositive
+
+-- | Generate an infinite list of nondecreasing values
+nonincreasingInf :: (Arbitrary a, Num a) => Gen [a]
+nonincreasingInf = monotonic_ infiniteList nonPositive
