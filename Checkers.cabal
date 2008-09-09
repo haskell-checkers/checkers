@@ -31,7 +31,7 @@ Library
   Extensions:
   Build-Depends:       base, random, QuickCheck < 2.0, array >= 0.1
   Exposed-Modules:     
-                       Test.QuickCheck.Help
+                       Test.QuickCheck.Checkers
                        Test.QuickCheck.Applicative
                        Test.QuickCheck.Classes
                        Test.QuickCheck.Bottoms

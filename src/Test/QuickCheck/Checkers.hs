@@ -6,7 +6,7 @@
 
 ----------------------------------------------------------------------
 -- |
--- Module      :  Test.QuickCheck.Help
+-- Module      :  Test.QuickCheck.Checkers
 -- Copyright   :  (c) Conal Elliott 2007,2008
 -- License     :  BSD3
 -- 
@@ -16,13 +16,13 @@
 -- Some QuickCheck helpers
 ----------------------------------------------------------------------
 
-module Test.QuickCheck.Help
+module Test.QuickCheck.Checkers
   (
   -- * Misc
     Test, TestBatch, unbatch, checkBatch, quickBatch, verboseBatch
   , probablisticPureCheck
   , Unop, Binop, genR, inverseL, inverse
-  , FractionalType, NumericType, OrderableType, NoPropertyType
+  , FracT, NumT, OrdT, T
   -- * Generalized equality
   , EqProp(..), eq
   , leftId, rightId, bothId, isAssoc, isCommut, commutes
@@ -125,10 +125,15 @@ type Unop a = a -> a
 type Binop a = a -> a -> a
 
 -- Testing types
-type FractionalType = Float
-type NumericType = Int
-type OrderableType = Char
-type NoPropertyType = Char
+
+-- | Token 'Fractional' type for tests
+type FracT = Float
+-- | Token 'Num' type for tests
+type NumT  = Int
+-- | Token 'Ord' type for tests
+type OrdT  = Char
+-- | Token uninteresting type for tests
+type T     = Char
 
 genR :: Random a => (a, a) -> Gen a
 genR (lo,hi) = fmap (fst . randomR (lo,hi)) rand

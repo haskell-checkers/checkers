@@ -1,7 +1,7 @@
 module Test.QuickCheck.Instances.Eq (notEqualTo, notOneof) where
 
 import Test.QuickCheck
-import Test.QuickCheck.Help
+import Test.QuickCheck.Checkers
 import Control.Monad.Extensions
 
 notEqualTo :: (Eq a,Arbitrary a) => a -> Gen a -> Gen a

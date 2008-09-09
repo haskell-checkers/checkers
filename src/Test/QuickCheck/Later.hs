@@ -21,7 +21,7 @@ module Test.QuickCheck.Later
   , delayForever
   ) where
 
-import Test.QuickCheck.Help
+import Test.QuickCheck.Checkers
 import Test.QuickCheck
 
 import System.Random (Random)
