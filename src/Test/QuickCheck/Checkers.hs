@@ -173,8 +173,18 @@ instance         EqProp Bool      where (=-=) = eq
 instance         EqProp Char      where (=-=) = eq
 instance         EqProp Int       where (=-=) = eq
 instance         EqProp Double    where (=-=) = eq
-instance Eq a => EqProp [a]       where (=-=) = eq
-instance Eq a => EqProp (Maybe a) where (=-=) = eq
+
+-- Lists
+instance EqProp a => EqProp [a] where
+    [] =-= [] = property True
+    x:xs =-= y:ys = x =-= y .&. xs =-= ys
+    _ =-= _ = property False
+
+-- Maybe
+instance EqProp a => EqProp (Maybe a) where
+    Nothing =-= Nothing = property True
+    Just x =-= Just y = x =-= y
+    _ =-= _ = property False
 
 -- Pairing
 instance (EqProp a, EqProp b) => EqProp (a,b) where
