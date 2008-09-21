@@ -20,7 +20,7 @@ module Test.QuickCheck.Classes
     monoid, monoidMorphism, semanticMonoid
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , applicative, applicativeMorphism, semanticApplicative
-  , monad, monadMorphism, semanticMonad
+  , monad, monadMorphism, semanticMonad, monadFunctor
   , arrow, arrowChoice
   )
   where
@@ -235,6 +235,18 @@ monad = const ( "monad laws"
    leftP f a    = (return a >>= f)  =-= f a
    rightP m     = (m >>= return)    =-=  m
    assocP m f g = ((m >>= f) >>= g) =-= (m >>= (\x -> f x >>= g))
+
+-- | Law for monads that are also instances of 'Functor'.
+monadFunctor :: forall m a b.
+                ( Functor m, Monad m
+                , Arbitrary a, Arbitrary b
+                , Arbitrary (m a), Show (m a), EqProp (m b)) =>
+                m (a, b) -> TestBatch
+monadFunctor = const ( "monad functor"
+                     , [("bind return", property bindReturnP)])
+ where
+   bindReturnP :: (a -> b) -> m a -> Property
+   bindReturnP f xs = fmap f xs =-= (xs >>= return . f)
 
 -- | 'Monad' morphism properties
 
