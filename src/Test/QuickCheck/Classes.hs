@@ -21,13 +21,13 @@ module Test.QuickCheck.Classes
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , applicative, applicativeMorphism, semanticApplicative
   , monad, monadMorphism, semanticMonad, monadFunctor
-  , arrow, arrowChoice
+  , monadApplicative, arrow, arrowChoice
   )
   where
 
 import Data.Monoid
 import Control.Applicative
-import Control.Monad (join)
+import Control.Monad (ap, join)
 import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
 import Test.QuickCheck
 import Text.Show.Functions ()
@@ -247,6 +247,25 @@ monadFunctor = const ( "monad functor"
  where
    bindReturnP :: (a -> b) -> m a -> Property
    bindReturnP f xs = fmap f xs =-= (xs >>= return . f)
+
+monadApplicative :: forall m a b.
+                    ( Applicative m, Monad m
+                    , EqProp (m a), EqProp (m b)
+                    , Show a, Arbitrary a
+                    , Show (m a), Arbitrary (m a)
+                    , Show (m (a -> b)), Arbitrary (m (a -> b))) =>
+                    m (a, b) -> TestBatch
+monadApplicative = const ( "monad applicative"
+                         , [ ("pure", property pureP)
+                           , ("ap", property apP)
+                           ]
+                         )
+ where
+   pureP :: a -> Property
+   apP :: m (a -> b) -> m a -> Property
+
+   pureP x = (pure x :: m a) =-= return x
+   apP f x = (f <*> x) =-= (f `ap` x)
 
 -- | 'Monad' morphism properties
 
