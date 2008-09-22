@@ -22,6 +22,7 @@ module Test.QuickCheck.Classes
   , applicative, applicativeMorphism, semanticApplicative
   , monad, monadMorphism, semanticMonad, monadFunctor
   , monadApplicative, arrow, arrowChoice, traversable
+  , monadPlus, monadOr
   )
   where
 
@@ -29,7 +30,7 @@ import Data.Monoid
 import Data.Foldable (foldMap)
 import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
 import Control.Applicative
-import Control.Monad (ap, join)
+import Control.Monad (MonadPlus (..), ap, join)
 import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
 import Test.QuickCheck
 import Text.Show.Functions ()
@@ -327,6 +328,49 @@ semanticMonad :: forall f g.
   ) =>
   f () -> TestBatch
 semanticMonad = const (monadMorphism (model1 :: forall b. f b -> g b))
+
+-- | Laws for MonadPlus instances with left distribution.
+monadPlus :: forall m a b.
+             ( MonadPlus m, Show (m a)
+             , Arbitrary a, Arbitrary (m a), Arbitrary (m b)
+             , EqProp (m a), EqProp (m b)) =>
+             m (a, b) -> TestBatch
+monadPlus = const ( "MonadPlus laws"
+                  , [ ("left zero", property leftZeroP)
+                    , ("left identity", leftId mplus (mzero :: m a))
+                    , ("right identity", rightId mplus (mzero :: m a))
+                    , ("associativity" , isAssoc (mplus :: Binop (m a)))
+                    , ("left distribution", property leftDistP)
+                    ]
+                  )
+ where
+   leftZeroP :: (a -> m b) -> Property
+   leftDistP :: m a -> m a -> (a -> m b) -> Property
+
+   leftZeroP k = (mzero >>= k) =-= mzero
+   leftDistP a b k = (a `mplus` b >>= k) =-= ((a >>= k) `mplus` (b >>= k))
+
+-- | Laws for MonadPlus instances with left catch.
+monadOr :: forall m a b.
+           ( MonadPlus m, Show a, Show (m a)
+           , Arbitrary a, Arbitrary (m a), Arbitrary (m b)
+           , EqProp (m a), EqProp (m b)) =>
+           m (a, b) -> TestBatch
+monadOr = const ( "MonadOr laws"
+                , [ ("left zero", property leftZeroP)
+                  , ("left identity", leftId mplus (mzero :: m a))
+                  , ("right identity", rightId mplus (mzero :: m a))
+                  , ("associativity" , isAssoc (mplus :: Binop (m a)))
+                  , ("left catch", property leftCatchP)
+                  ]
+                )
+ where
+   leftZeroP :: (a -> m b) -> Property
+   leftCatchP :: a -> m a -> Property
+
+   leftZeroP k = (mzero >>= k) =-= mzero
+   leftCatchP a b = return a `mplus` b =-= return a
+
 
 arrow :: forall (~>) b c d e.
          ( Arrow (~>)
