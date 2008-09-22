@@ -21,11 +21,13 @@ module Test.QuickCheck.Classes
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , applicative, applicativeMorphism, semanticApplicative
   , monad, monadMorphism, semanticMonad, monadFunctor
-  , monadApplicative, arrow, arrowChoice
+  , monadApplicative, arrow, arrowChoice, traversable
   )
   where
 
 import Data.Monoid
+import Data.Foldable (foldMap)
+import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
 import Control.Applicative
 import Control.Monad (ap, join)
 import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
@@ -396,3 +398,19 @@ arrowChoice = const ("arrow choice laws"
     rightMovesP f g = (left f >>> right (arr g))
                         =-= ((right (arr g)) >>> left f)
 
+traversable :: forall f a b m.
+               ( Traversable f, Monoid m, Show (f a)
+               , Arbitrary (f a), Arbitrary b, Arbitrary a, Arbitrary m
+               , EqProp (f b), EqProp m) =>
+               f (a, b, m) -> TestBatch
+traversable = const ( "traversable"
+                    , [ ("fmap", property fmapP)
+                      , ("foldMap", property foldMapP)
+                      ]
+                    )
+ where
+   fmapP :: (a -> b) -> f a -> Property
+   foldMapP :: (a -> m) -> f a -> Property
+
+   fmapP f x = f `fmap` x =-= f `fmapDefault` x
+   foldMapP f x = f `foldMap` x =-= f `foldMapDefault` x
