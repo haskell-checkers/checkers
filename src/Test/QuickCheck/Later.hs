@@ -37,34 +37,36 @@ delayP d = forAll (genR (0,d))
 -- | Is the given function commutative when restricted to the same value
 -- but possibly different times?
 isCommutTimes :: (EqProp b, Arbitrary a, Show a) => Double -> (a -> a -> b) -> Property
+
 isCommutTimes d (#) =
   delayP d $ \ t1 ->
   delayP d $ \ t2 ->
-  \ v ->
-  let v1 = delay t1 v
-      v2 = delay t2 v
-  in
-    v1 # v2 =-= v2 # v1
+  \ v -> let del = flip delay v in
+           del t1 # del t2 =-= del t2 # del t1
+
+-- Note that we delay v by t1 and by t2 twice.
+-- 
+-- TODO: make sure CSE isn't kicking in.  Examine the core code.
 
 -- | Is the given function associative when restricted to the same value
 -- but possibly different times?
 isAssocTimes :: (EqProp a, Arbitrary a, Show a) => Double -> (a -> a -> a) -> Property
+
 isAssocTimes d (#) =
   delayP d $ \ t1 ->
   delayP d $ \ t2 ->
   delayP d $ \ t3 ->
-  \ v ->
-  let v1 = delay t1 v
-      v2 = delay t2 v
-      v3 = delay t3 v
-  in
-    (v1 # v2) # v3 =-= v1 # (v2 # v3)
+  \ v -> let del = flip delay v in
+           (del t1 # del t2) # del t3 =-= del t1 # (del t2 # del t3)
+
 
 -- The value eventually returned by an action.  Probably handy elsewhere.
 -- TODO: what are the necessary preconditions in order to make this
 -- function referentially transparent?
 eventually :: IO a -> a
 eventually = unsafePerformIO . unsafeInterleaveIO
+
+-- Why unsafeInterleaveIO?  Because ...
 
 -- | Delay a value's availability by the given duration in seconds.
 -- Note that the delay happens only on the first evaluation.
