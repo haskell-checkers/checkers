@@ -15,18 +15,18 @@ import Control.Applicative
 {- | Generates a non-empty list with the contents generated using its
      argument.
 -}
-nonEmpty :: Arbitrary a => Gen a -> Gen [a]
+nonEmpty :: Gen a -> Gen [a]
 nonEmpty x = liftA2 (:) x (anyList x)
 
 {- | Generates any list (possibly empty) with the contents generated using
      its argument.
 -}
-anyList :: Arbitrary a => Gen a -> Gen [a]
+anyList :: Gen a -> Gen [a]
 anyList x = frequency [(1, pure []), (4, nonEmpty x)]
 
 {- | Generates an infinite list with contents generated using its argument
 -}
-infiniteList :: Arbitrary a => Gen a -> Gen [a]
+infiniteList :: Gen a -> Gen [a]
 infiniteList x = liftA2 (:) x (infiniteList x)
 
 sumA :: (Applicative f, Num a) => f a -> f [a] -> f [a]
