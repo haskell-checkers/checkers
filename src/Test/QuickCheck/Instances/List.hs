@@ -1,6 +1,7 @@
 module Test.QuickCheck.Instances.List
        (anyList,nonEmpty
        ,infiniteList
+       ,setLength
        ,increasing,nondecreasing
        ,increasingInf,nondecreasingInf
        ,decreasing,nonincreasing
@@ -28,6 +29,12 @@ anyList x = frequency [(1, pure []), (4, nonEmpty x)]
 -}
 infiniteList :: Gen a -> Gen [a]
 infiniteList x = liftA2 (:) x (infiniteList x)
+
+{- | Generates a list with a set length
+-}
+setLength :: Int -> Gen a -> Gen [a]
+setLength 0 _ = pure []
+setLength n g = (:) <$> g <*> setLength (n-1) g
 
 sumA :: (Applicative f, Num a) => f a -> f [a] -> f [a]
 sumA = liftA2 (scanl (+))
