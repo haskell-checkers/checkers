@@ -1,4 +1,4 @@
-module Test.QuickCheck.Instances.Maybe where
+module Test.QuickCheck.Instances.Maybe (maybeGen) where
 
 import Test.QuickCheck
 import Test.QuickCheck.Applicative ()
