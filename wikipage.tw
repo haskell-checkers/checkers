@@ -5,9 +5,9 @@
 '''checkers''' is a library for reusable QuickCheck properties, particularly for standard type classes (class laws and [http://conal.net/papers/simply-reactive class morphisms]).  For instance, a good deal of [[Reactive]] can be specified and tested using just these properties.  Checkers also lots of support for randomly generating data values (thanks to Thomas Davie).
 
 Besides this wiki page, here are more ways to find out about checkers:
-* Read [http://code.haskell.org/checkers/doc/html/ the library documentation].
-* Get the code repository: '''<tt>darcs get http://code.haskell.org/checkers</tt>'''.
-* Install from [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/checkers Hackage].
-* See the [[checkers/Versions| version history]].
+* Visit the [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/checkers Hackage page] for library documentation and to download & install.
+* Or install with <tt>cabal install checkers</tt>.
+* Get the code repository: <tt>darcs get http://code.haskell.org/checkers</tt>.
+<!-- * See the [[checkers/Versions| version history]]. -->
 
 Please leave comments at the [[Talk:checkers|Talk page]].
