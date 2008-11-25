@@ -25,6 +25,7 @@ module Test.QuickCheck.Checkers
   , FracT, NumT, OrdT, T
   -- * Generalized equality
   , EqProp(..), eq
+  , BinRel, reflexive, transitive, symmetric, antiSymmetric
   , leftId, rightId, bothId, isAssoc, isCommut, commutes
   , MonoidD, monoidD, endoMonoidD, homomorphism
   , idempotent, idempotent2, idemElem
@@ -209,6 +210,47 @@ eqModels = (=-=) `on` model
 
 -- Other types
 -- instance EqProp a => EqProp (S.Stream a) where (=-=) = eqModels
+
+-- Binary relation
+type BinRel  a = a -> a -> Bool
+
+-- | Reflexive property: @a `rel` a@
+reflexive :: (Arbitrary a, Show a) =>
+             BinRel a -> Property
+reflexive rel = property $ \ a -> a `rel` a
+
+-- | Transitive property: @a `rel` b && b `rel` c ==> a `rel` c@.
+-- Generate @a@ randomly, but use @gen a@ to generate @b@ and @gen b@ to
+-- generate @c@.  @gen@ ought to satisfy @rel@ fairly often.
+transitive :: (Arbitrary a, Show a) =>
+              BinRel a -> (a -> Gen a) -> Property
+transitive rel gen =
+  property $ \ a ->
+    forAll (gen a) $ \ b ->
+      forAll (gen b) $ \ c ->
+        (a `rel` b) && (b `rel` c) ==> (a `rel` c)
+
+-- | Symmetric property: @a `rel` b ==> b `rel` a@.  Generate @a@
+-- randomly, but use @gen a@ to generate @b@.  @gen@ ought to satisfy
+-- @rel@ fairly often.
+symmetric :: (Arbitrary a, Show a) =>
+             BinRel a -> (a -> Gen a) -> Property
+symmetric rel gen =
+  property $ \ a ->
+    forAll (gen a) $ \ b ->
+      (a `rel` b) ==> (b `rel` a)
+
+-- | Symmetric property: @a `rel` b && b `rel` a ==> a == b@.  Generate
+-- @a@ randomly, but use @gen a@ to generate @b@.  @gen@ ought to satisfy
+-- @rel@ fairly often.
+antiSymmetric :: (Arbitrary a, Show a, Eq a) =>
+                 BinRel a -> (a -> Gen a) -> Property
+antiSymmetric rel gen =
+  property $ \ a ->
+    forAll (gen a) $ \ b ->
+      (a `rel` b) && (b `rel` a) ==> a == b
+
+
 
 
 -- | Has a given left identity, according to '(=-=)'

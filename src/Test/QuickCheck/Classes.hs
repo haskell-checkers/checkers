@@ -16,8 +16,8 @@
 ----------------------------------------------------------------------
 
 module Test.QuickCheck.Classes
-  (
-    monoid, monoidMorphism, semanticMonoid
+  ( ordRel, ord
+  , monoid, monoidMorphism, semanticMonoid
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , applicative, applicativeMorphism, semanticApplicative
   , monad, monadMorphism, semanticMonad, monadFunctor
@@ -37,6 +37,24 @@ import Text.Show.Functions ()
 
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Instances.Char ()
+
+
+-- | Total ordering.  @gen a@ ought to generate values @b@ satisfying @a
+-- `rel` b@ fairly often.
+ordRel :: forall a. (Ord a, Show a, Arbitrary a, EqProp a) =>
+          BinRel a -> (a -> Gen a) -> TestBatch
+ordRel rel gen =
+  ( "ord"
+  , [ ("reflexive"    , reflexive     rel    )
+    , ("transitive"   , transitive    rel gen)
+    , ("antiSymmetric", antiSymmetric rel gen)
+    ]
+  )
+
+-- | Total ordering
+ord :: forall a. (Ord a, Show a, Arbitrary a, EqProp a) =>
+       (a -> Gen a) -> TestBatch
+ord = ordRel (<=)
 
 
 -- | Properties to check that the 'Monoid' 'a' satisfies the monoid
