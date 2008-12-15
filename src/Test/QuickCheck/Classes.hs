@@ -16,7 +16,7 @@
 ----------------------------------------------------------------------
 
 module Test.QuickCheck.Classes
-  ( ordRel, ord
+  ( ordRel, ord, ordMorphism, semanticOrd
   , monoid, monoidMorphism, semanticMonoid
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , applicative, applicativeMorphism, semanticApplicative
@@ -57,6 +57,42 @@ ord :: forall a. (Ord a, Show a, Arbitrary a, EqProp a) =>
 ord = ordRel (<=)
 
 
+
+-- | 'Ord' morphism properties.  @h@ is an 'Ord' morphism iff:
+-- 
+-- >    a <= b = h a <= h b
+-- >
+-- >    h (a `min` b) = h a `min` h b
+-- >    h (a `max` b) = h a `max` h b
+ordMorphism :: (Ord a, Ord b, EqProp b, Show a, Arbitrary a) =>
+               (a -> b) -> TestBatch
+
+ordMorphism h = ( "ord morphism"
+                , [ ("(<=)", distrib' (<=))
+                  , ("min" , distrib  min )
+                  , ("max" , distrib  max )
+                  ]
+                )
+ where
+   distrib  :: (forall c. Ord c => c -> c -> c) -> Property
+   distrib  op = property $ \ u v -> h (u `op` v) =-= h u `op` h v
+   
+   distrib' :: EqProp d => (forall c. Ord c => c -> c -> d) -> Property
+   distrib' op = property $ \ u v -> u `op` v =-= h u `op` h v
+
+-- | The semantic function ('model') for @a@ is an 'ordMorphism'.
+semanticOrd :: forall a b.
+  ( Model a b
+  , Ord a, Ord b
+  , Show a
+  , Arbitrary a
+  , EqProp b
+  ) =>
+  a -> TestBatch
+semanticOrd = const (first ("semantic " ++)
+                      (ordMorphism (model:: a -> b)))
+
+
 -- | Properties to check that the 'Monoid' 'a' satisfies the monoid
 -- properties.  The argument value is ignored and is present only for its
 -- type.
@@ -76,13 +112,14 @@ monoidMorphism q = ("monoid morphism", homomorphism monoidD monoidD q)
 
 semanticMonoid :: forall a b.
   ( Model a b
-  , Monoid a
-  , Monoid b
+  , Monoid a, Monoid b
   , Show a
   , Arbitrary a
   , EqProp b
   ) =>
   a -> TestBatch
+
+-- | The semantic function ('model') for @a@ is a 'monoidMorphism'.
 semanticMonoid = const (first ("semantic " ++)
                               (monoidMorphism (model:: a -> b)))
 
@@ -156,6 +193,7 @@ functorMorphism q = ("functor morphism", [("fmap", property fmapP)])
 -- Note: monomorphism prevent us from saying @commutes (.) q (fmap h)@,
 -- since @fmap h@ is used at two different types.
 
+-- | The semantic function ('model1') for @f@ is a 'functorMorphism'.
 semanticFunctor :: forall f g.
   ( Model1 f g
   , Functor f
@@ -221,6 +259,7 @@ applicativeMorphism q =
    applyP mf mx = q (mf <*> mx) =-= (q mf <*> q mx)
 
 
+-- | The semantic function ('model1') for @f@ is an 'applicativeMorphism'.
 semanticApplicative :: forall f g.
   ( Model1 f g
   , Applicative f, Applicative g
@@ -332,6 +371,7 @@ monadMorphism q =
 
 -- I'm stuck at the end here.  What's missing?
 
+-- | The semantic function ('model1') for @f@ is a 'monadMorphism'.
 semanticMonad :: forall f g.
   ( Model1 f g
   , Monad f, Monad g
@@ -447,8 +487,8 @@ arrowChoice :: forall (~>) b c d e.
                ) =>
                b ~> (c,d,e) -> TestBatch
 arrowChoice = const ("arrow choice laws"
-                    , [ ("left works as funs"     , property leftAsFunP)
-                      , ("right can move"         , property rightMovesP)
+                    , [ ("left works as funs", property leftAsFunP)
+                      , ("right can move"    , property rightMovesP)
                       ]
                     )
   where

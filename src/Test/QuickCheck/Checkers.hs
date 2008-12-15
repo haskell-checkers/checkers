@@ -242,7 +242,7 @@ symmetric rel gen =
 
 -- | Symmetric property: @a `rel` b && b `rel` a ==> a == b@.  Generate
 -- @a@ randomly, but use @gen a@ to generate @b@.  @gen@ ought to satisfy
--- @rel@ fairly often.
+-- both @rel@ directions fairly often but not always.
 antiSymmetric :: (Arbitrary a, Show a, Eq a) =>
                  BinRel a -> (a -> Gen a) -> Property
 antiSymmetric rel gen =
