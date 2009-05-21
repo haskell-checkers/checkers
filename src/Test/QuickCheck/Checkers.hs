@@ -132,7 +132,7 @@ type FracT = Float
 -- | Token 'Num' type for tests
 type NumT  = Int
 -- | Token 'Ord' type for tests
-type OrdT  = Char
+type OrdT  = Int -- Char -- randomR is broken on Char
 -- | Token uninteresting type for tests
 type T     = Char
 
@@ -170,10 +170,11 @@ a `eq` a' = property (a == a')
 --   instance EqProp a where (=-=) = eq
 -- E.g.,
 
-instance         EqProp Bool      where (=-=) = eq
-instance         EqProp Char      where (=-=) = eq
-instance         EqProp Int       where (=-=) = eq
-instance         EqProp Double    where (=-=) = eq
+instance EqProp Bool   where (=-=) = eq
+instance EqProp Char   where (=-=) = eq
+instance EqProp Int    where (=-=) = eq
+instance EqProp Float  where (=-=) = eq
+instance EqProp Double where (=-=) = eq
 
 -- Lists
 instance EqProp a => EqProp [a] where

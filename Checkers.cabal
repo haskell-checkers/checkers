@@ -26,7 +26,7 @@ build-type:          Simple
 Library
   hs-Source-Dirs:      src
   Extensions:
-  Build-Depends:       base, random, QuickCheck < 2.0, array >= 0.1
+  Build-Depends:       base, random, QuickCheck, array >= 0.1
   Exposed-Modules:     
                        Test.QuickCheck.Checkers
                        Test.QuickCheck.Applicative

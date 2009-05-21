@@ -90,7 +90,7 @@ semanticOrd :: forall a b.
   ) =>
   a -> TestBatch
 semanticOrd = const (first ("semantic " ++)
-                      (ordMorphism (model:: a -> b)))
+                      (ordMorphism (model :: a -> b)))
 
 
 -- | Properties to check that the 'Monoid' 'a' satisfies the monoid
