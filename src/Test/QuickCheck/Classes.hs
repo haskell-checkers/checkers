@@ -154,6 +154,7 @@ functorMonoid = const ("functor-monoid"
 functor :: forall m a b c.
            ( Functor m
            , Arbitrary a, Arbitrary b, Arbitrary c
+           , CoArbitrary a, CoArbitrary b
            , Show (m a), Arbitrary (m a), EqProp (m a), EqProp (m c)) =>
            m (a,b,c) -> TestBatch
 functor = const ( "functor"
@@ -210,7 +211,7 @@ semanticFunctor = const (functorMorphism (model1 :: forall b. f b -> g b))
 -- properties
 applicative :: forall m a b c.
                ( Applicative m
-               , Arbitrary a, Arbitrary b, Arbitrary (m a)
+               , Arbitrary a, CoArbitrary a, Arbitrary b, Arbitrary (m a)
                , Arbitrary (m (b -> c)), Show (m (b -> c))
                , Arbitrary (m (a -> b)), Show (m (a -> b))
                , Show a, Show (m a)
@@ -275,7 +276,7 @@ semanticApplicative =
 -- | Properties to check that the 'Monad' @m@ satisfies the monad properties
 monad :: forall m a b c.
          ( Monad m
-         , Show a, Arbitrary a, Arbitrary b
+         , Show a, Arbitrary a, CoArbitrary a, Arbitrary b, CoArbitrary b
          , Arbitrary (m a), EqProp (m a), Show (m a)
          , Arbitrary (m b), EqProp (m b)
          , Arbitrary (m c), EqProp (m c)
@@ -299,7 +300,7 @@ monad = const ( "monad laws"
 -- | Law for monads that are also instances of 'Functor'.
 monadFunctor :: forall m a b.
                 ( Functor m, Monad m
-                , Arbitrary a, Arbitrary b
+                , Arbitrary a, Arbitrary b, CoArbitrary a
                 , Arbitrary (m a), Show (m a), EqProp (m b)) =>
                 m (a, b) -> TestBatch
 monadFunctor = const ( "monad functor"
@@ -390,7 +391,7 @@ semanticMonad = const (monadMorphism (model1 :: forall b. f b -> g b))
 -- | Laws for MonadPlus instances with left distribution.
 monadPlus :: forall m a b.
              ( MonadPlus m, Show (m a)
-             , Arbitrary a, Arbitrary (m a), Arbitrary (m b)
+             , Arbitrary a, CoArbitrary a, Arbitrary (m a), Arbitrary (m b)
              , EqProp (m a), EqProp (m b)) =>
              m (a, b) -> TestBatch
 monadPlus = const ( "MonadPlus laws"
@@ -411,7 +412,7 @@ monadPlus = const ( "MonadPlus laws"
 -- | Laws for MonadPlus instances with left catch.
 monadOr :: forall m a b.
            ( MonadPlus m, Show a, Show (m a)
-           , Arbitrary a, Arbitrary (m a), Arbitrary (m b)
+           , Arbitrary a, CoArbitrary a, Arbitrary (m a), Arbitrary (m b)
            , EqProp (m a), EqProp (m b)) =>
            m (a, b) -> TestBatch
 monadOr = const ( "MonadOr laws"
@@ -436,6 +437,7 @@ arrow :: forall (~>) b c d e.
          , Show b, Show c, Show d, Show e
          , Arbitrary (d ~> e), Arbitrary (c ~> d), Arbitrary (b ~> c)
          , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
+         , CoArbitrary b, CoArbitrary c, CoArbitrary d
          , EqProp (b ~> e), EqProp (b ~> d)
          , EqProp ((b,d) ~> c)
          , EqProp ((b,d) ~> (c,d)), EqProp ((b,e) ~> (d,e))
@@ -482,6 +484,7 @@ arrowChoice :: forall (~>) b c d e.
                , Show (b ~> c)
                , Arbitrary (b ~> c)
                , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
+               , CoArbitrary b, CoArbitrary d
                , EqProp ((Either b d) ~> (Either c e))
                , EqProp ((Either b d) ~> (Either c d))
                ) =>
@@ -503,6 +506,7 @@ arrowChoice = const ("arrow choice laws"
 traversable :: forall f a b m.
                ( Traversable f, Monoid m, Show (f a)
                , Arbitrary (f a), Arbitrary b, Arbitrary a, Arbitrary m
+               , CoArbitrary a
                , EqProp (f b), EqProp m) =>
                f (a, b, m) -> TestBatch
 traversable = const ( "traversable"

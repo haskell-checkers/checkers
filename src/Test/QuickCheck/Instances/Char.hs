@@ -9,9 +9,15 @@ import Data.Char
 import Test.QuickCheck
 import Test.QuickCheck.Instances.Eq
 
-instance Arbitrary Char where
-    arbitrary   = choose ('\0','\255')
-    coarbitrary = variant . ord
+-- instance Arbitrary Char where
+--     arbitrary   = choose ('\0','\255')
+--     coarbitrary = variant . ord
+
+-- instance Arbitrary Char where
+--     arbitrary   = choose ('\0','\255')
+
+-- instance CoArbitrary Char where
+--     coarbitrary = variant . ord
 
 -- Bob: why the `rem` 4 ?
 

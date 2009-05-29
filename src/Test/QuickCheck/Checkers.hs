@@ -20,7 +20,7 @@ module Test.QuickCheck.Checkers
   (
   -- * Misc
     Test, TestBatch, unbatch, checkBatch, quickBatch, verboseBatch
-  , probablisticPureCheck
+  -- , probablisticPureCheck
   , Unop, Binop, genR, inverseL, inverse
   , FracT, NumT, OrdT, T
   -- * Generalized equality
@@ -36,8 +36,8 @@ module Test.QuickCheck.Checkers
   , eqModels
   , Model1(..)
   -- * Some handy testing types
-  , Positive, NonZero(..), NonNegative(..)
-  , suchThat, suchThatMaybe
+  -- , Positive, NonZero(..), NonNegative(..)
+  -- , suchThat, suchThatMaybe
   , arbs, gens
   , (.&.)
   , arbitrarySatisfying
@@ -51,12 +51,17 @@ import Control.Arrow ((***),first)
 import Data.List (foldl')
 import System.Random
 import Test.QuickCheck
-import System.IO.Unsafe
+-- import System.IO.Unsafe
+
+import Test.QuickCheck.Gen      (Gen (..)) -- for rand
+-- import Test.QuickCheck.Property (Prop(..)) -- for evaluate
 
 import Test.QuickCheck.Utils
+
+-- import Test.QuickCheck.Utils
 import Test.QuickCheck.Applicative ()
-import Test.QuickCheck.Instances.Num
-import Control.Monad.Extensions
+-- import Test.QuickCheck.Instances.Num
+-- import Control.Monad.Extensions
 
 
 -- import qualified Data.Stream as S
@@ -79,13 +84,13 @@ unbatch (batchName,props) = map (first ((batchName ++ ": ")++)) props
 -- TODO: consider a tree structure so that flattening is unnecessary.
 
 -- | Run a batch of tests.  See 'quickBatch' and 'verboseBatch'.
-checkBatch :: Config -> TestBatch -> IO ()
-checkBatch config (name,tests) =
+checkBatch :: Args -> TestBatch -> IO ()
+checkBatch args (name,tests) =
   do putStrLn $ "\n" ++ name ++ ":"
      mapM_ pr tests
  where
    pr (s,p) = do putStr (padTo (width + 4) ("  "++s ++ ":"))
-                 catch (check config p) print
+                 catch (quickCheckWith args p) print
    width    = foldl' max 0 (map (length.fst) tests)
 
 padTo :: Int -> String -> String
@@ -99,9 +104,12 @@ quickBatch = checkBatch quick'
 verboseBatch :: TestBatch -> IO ()
 verboseBatch = checkBatch verbose'
 
-quick', verbose' :: Config
-quick'   = defaultConfig { configMaxTest = 500 }
-verbose' = quick' { configEvery = \ n args -> show n ++ ":\n" ++ unlines args }
+quick', verbose' :: Args
+quick'   = stdArgs { maxSuccess = 500 }
+verbose' = quick'
+           -- quick' { configEvery = \ n args -> show n ++ ":\n" ++ unlines args }
+
+-- TODO: Restore verbose functionality.  How in QC2?
 
 {-
 
@@ -407,36 +415,22 @@ class Model1 f g | f -> g where
 
 -- from QC2, plus tweaks
 
-type Positive a = NonZero (NonNegative a)
-
-newtype NonZero a = NonZero { unNonZero :: a }
- deriving ( Eq, Ord, Num, Integral, Real, Enum, Show, Read )
-
-instance (Num a, Arbitrary a) => Arbitrary (NonZero a) where
-  arbitrary   = fmap NonZero $ arbitrary `suchThat` (/= 0)
-  coarbitrary = coarbitrary . unNonZero
-
-newtype NonNegative a = NonNegative { unNonNegative :: a }
- deriving ( Eq, Ord, Num, Integral, Real, Enum, Show, Read )
-
-instance (Num a, Arbitrary a) => Arbitrary (NonNegative a) where
-  arbitrary   = nonNegative
-  coarbitrary = coarbitrary . unNonNegative
+-- type Positive a = NonZero (NonNegative a)
 
 arbitrarySatisfying :: Arbitrary a => (a -> Bool) -> Gen a
 arbitrarySatisfying = (arbitrary `suchThat`)
 
--- | Generates a value that satisfies a predicate.
-suchThat :: Gen a -> (a -> Bool) -> Gen a
-gen `suchThat` p = satisfiesM p gen
+-- -- | Generates a value that satisfies a predicate.
+-- suchThat :: Gen a -> (a -> Bool) -> Gen a
+-- gen `suchThat` p = satisfiesM p gen
 
--- | Tries to generate a value that satisfies a predicate.
-suchThatMaybe :: Gen a -> (a -> Bool) -> Gen (Maybe a)
-gen `suchThatMaybe` p = sized (try 0 . max 1)
- where
-  try _ 0 = return Nothing
-  try k n = do x <- resize (2*k+n) gen
-               if p x then return (Just x) else try (k+1) (n-1)
+-- -- | Tries to generate a value that satisfies a predicate.
+-- suchThatMaybe :: Gen a -> (a -> Bool) -> Gen (Maybe a)
+-- gen `suchThatMaybe` p = sized (try 0 . max 1)
+--  where
+--   try _ 0 = return Nothing
+--   try k n = do x <- resize (2*k+n) gen
+--                if p x then return (Just x) else try (k+1) (n-1)
 
 -- | Generate n arbitrary values
 arbs :: Arbitrary a => Int -> IO [a]
@@ -449,11 +443,6 @@ gens n gen =
 
 -- The next two are from twanvl:
 
-infixr 3 .&.
--- | Property conjunction
-(.&.) :: (Testable prop1, Testable prop2) => prop1 -> prop2 -> Property
-p1 .&. p2 = property $ \b -> if b then property p1 else property p2
-
 instance Testable a => Testable [a] where
   property []    = property True
   property props = property $ \n -> props !! (n `mod` len)
@@ -462,30 +451,54 @@ instance Testable a => Testable [a] where
 instance (Testable a, Testable b) => Testable (a,b) where
   property = uncurry (.&.)
 
-probablisticPureCheck :: Testable a => Config -> a -> Bool
-probablisticPureCheck config a = unsafePerformIO $
+{-
+probablisticPureCheck :: Testable a => Args -> a -> Bool
+probablisticPureCheck args a = unsafePerformIO $
   do rnd <- newStdGen
-     probablisticPureTests config (evaluate a) rnd 0 0 []
+     probablisticPureTests args (evaluate a) rnd 0 0 []
 
-probablisticPureTests :: Config
+
+probablisticPureTests :: Args
                       -> Gen Result
                       -> StdGen
                       -> Int
                       -> Int
                       -> [[String]]
                       -> IO Bool
-probablisticPureTests config gen rnd0 ntest nfail stamps
-  | ntest == configMaxTest config = return True
-  | nfail == configMaxFail config = return True
+probablisticPureTests args gen rnd0 ntest nfail stamps
+  | ntest == maxSuccess args = return True
+  | nfail == maxDiscard args = return True
   | otherwise                     =
       case ok result of
         Nothing    ->
-          probablisticPureTests config gen rnd1 ntest (nfail+1) stamps
+          probablisticPureTests args gen rnd1 ntest (nfail+1) stamps
         Just True  ->
-          probablisticPureTests config gen rnd1 (ntest+1) nfail
+          probablisticPureTests args gen rnd1 (ntest+1) nfail
                                 (stamp result:stamps)
         Just False ->
           return False
      where
-      result      = generate (configSize config ntest) rnd2 gen
+      result      = generate (maxSize config ntest) rnd2 gen
       (rnd1,rnd2) = split rnd0
+
+-}
+
+-- TODO: resurrect probablistic stuff.  bob?
+
+
+{--------------------------------------------------------------------
+    Copied (& tweaked) from QC1
+--------------------------------------------------------------------}
+
+-- TODO: are there QC2 replacements for these QC1 operations?
+
+rand :: Gen StdGen
+rand = MkGen (\r _ -> r)
+
+generate :: Int -> StdGen -> Gen a -> a
+generate n rnd (MkGen m) = m rnd' size
+ where
+  (size, rnd') = randomR (0, n) rnd
+
+-- evaluate :: Testable a => a -> Gen Result
+-- evaluate a = gen where MkProp gen = property a

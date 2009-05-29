@@ -1,5 +1,5 @@
 Name:                checkers
-Version:             0.1.4
+Version:             0.2
 Cabal-Version:       >= 1.2
 Synopsis:            Check properties on standard classes and data structures.
 Category:            Testing
@@ -26,8 +26,9 @@ build-type:          Simple
 Library
   hs-Source-Dirs:      src
   Extensions:
-  Build-Depends:       base, random, QuickCheck, array >= 0.1
+  Build-Depends:       base, random, QuickCheck>=2, array >= 0.1
   Exposed-Modules:     
+                       Test.QuickCheck.Utils
                        Test.QuickCheck.Checkers
                        Test.QuickCheck.Applicative
                        Test.QuickCheck.Classes
