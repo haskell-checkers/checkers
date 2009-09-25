@@ -27,3 +27,10 @@ instance Arbitrary Word8 where
 
 instance CoArbitrary Word8 where
   coarbitrary = variant . (fromIntegral :: Word8 -> Int)
+
+
+instance Arbitrary Word where
+  arbitrary   = fromInteger <$> arbitrary
+
+instance CoArbitrary Word where
+  coarbitrary = variant . (fromIntegral :: Word -> Int)
