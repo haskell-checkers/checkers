@@ -59,7 +59,6 @@ import Test.QuickCheck.Gen      (Gen (..)) -- for rand
 import Test.QuickCheck.Utils
 
 -- import Test.QuickCheck.Utils
-import Test.QuickCheck.Applicative ()
 -- import Test.QuickCheck.Instances.Num
 -- import Control.Monad.Extensions
 

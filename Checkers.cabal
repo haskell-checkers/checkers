@@ -30,7 +30,6 @@ Library
   Exposed-Modules:     
                        Test.QuickCheck.Utils
                        Test.QuickCheck.Checkers
-                       Test.QuickCheck.Applicative
                        Test.QuickCheck.Classes
                        Test.QuickCheck.Bottoms
                        Test.QuickCheck.Instances

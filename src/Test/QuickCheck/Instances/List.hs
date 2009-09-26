@@ -9,7 +9,6 @@ module Test.QuickCheck.Instances.List
        ) where
 
 import Test.QuickCheck
-import Test.QuickCheck.Applicative ()
 import Test.QuickCheck.Instances.Num
 import Control.Applicative
 
