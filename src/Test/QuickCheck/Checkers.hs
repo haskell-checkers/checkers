@@ -199,6 +199,12 @@ instance EqProp a => EqProp (Maybe a) where
 instance (EqProp a, EqProp b) => EqProp (a,b) where
   (a,b) =-= (a',b') = a =-= a' .&. b =-= b'
 
+instance (EqProp a, EqProp b, EqProp c) => EqProp (a,b,c) where
+  (a,b,c) =-=(a',b',c') = a =-= a' .&. b =-= b' .&. c =-= c'
+
+instance (EqProp a, EqProp b, EqProp c, EqProp d) => EqProp (a,b,c,d) where
+  (a,b,c,d) =-=(a',b',c',d') = a =-= a' .&. b =-= b' .&. c =-= c' .&. d =-= d'
+
 -- Either
 instance (EqProp a, EqProp b) => EqProp (Either a b) where
   (Left x)  =-=  (Left x') = x =-= x'
