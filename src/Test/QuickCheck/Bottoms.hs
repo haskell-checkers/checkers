@@ -28,7 +28,7 @@ hangIO = do -- putStrLn "warning: blocking forever."
             -- This one can yield an exception "thread blocked indefinitely"
             -- newEmptyMVar >>= takeMVar
             -- sjanssen suggests this alternative:
-            forever $ threadDelay maxBound
+            _ <- forever $ threadDelay maxBound
             -- forever's return type is (), though it could be fully
             -- polymorphic.  Until it's fixed, I need the following line.
             return undefined

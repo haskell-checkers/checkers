@@ -78,5 +78,5 @@ delay d a = eventually $ threadDelay (round (1.0e6 * d)) >> return a
 -- 
 -- TODO: Remove when this module is moved into the unamb-test package.
 delayForever :: a
-delayForever = unsafePerformIO $ do forever (threadDelay maxBound)
+delayForever = unsafePerformIO $ do _ <- forever (threadDelay maxBound)
                                     return undefined
