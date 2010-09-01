@@ -36,13 +36,11 @@ Library
                        Test.QuickCheck.Instances.Array
                        Test.QuickCheck.Instances.Char
                        Test.QuickCheck.Instances.Eq
-                       Test.QuickCheck.Instances.Int
                        Test.QuickCheck.Instances.List
                        Test.QuickCheck.Instances.Maybe
                        Test.QuickCheck.Instances.Num
                        Test.QuickCheck.Instances.Ord
                        Test.QuickCheck.Instances.Tuple
-                       Test.QuickCheck.Instances.Word
                        Test.QuickCheck.Later
   Other-modules:
                        Control.Monad.Extensions
