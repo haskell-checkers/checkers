@@ -31,7 +31,7 @@ import Control.Concurrent
 import Control.Monad (forever)
 
 -- Generate a random delay up to given max seconds for a property.
-delayP :: (Num t, System.Random.Random t, Testable b) => t -> (t -> b) -> Property
+delayP :: (Show t, Num t, System.Random.Random t, Testable b) => t -> (t -> b) -> Property
 delayP d = forAll (genR (0,d))
 
 -- | Is the given function commutative when restricted to the same value

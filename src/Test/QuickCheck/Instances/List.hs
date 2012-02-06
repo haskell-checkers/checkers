@@ -46,11 +46,11 @@ monotonic :: (Arbitrary a, Num a) => Gen a -> Gen [a]
 monotonic gen = monotonic_ anyList gen
 
 -- | Generate increasing towards infinity
-increasing :: (Arbitrary a, Num a) => Gen [a]
+increasing :: (Arbitrary a, Eq a, Num a) => Gen [a]
 increasing = monotonic positive
 
 -- | Generate an infinite list of increasing values
-increasingInf :: (Arbitrary a, Num a) => Gen [a]
+increasingInf :: (Arbitrary a, Eq a, Num a) => Gen [a]
 increasingInf = monotonic_ infiniteList positive
 
 -- | Generate nondecreasing values
@@ -62,11 +62,11 @@ nondecreasingInf :: (Arbitrary a, Num a) => Gen [a]
 nondecreasingInf = monotonic_ infiniteList nonNegative
 
 -- | Generate increasing towards infinity
-decreasing :: (Arbitrary a, Num a) => Gen [a]
+decreasing :: (Arbitrary a, Eq a, Num a) => Gen [a]
 decreasing = monotonic negative
 
 -- | Generate an infinite list of increasing values
-decreasingInf :: (Arbitrary a, Num a) => Gen [a]
+decreasingInf :: (Arbitrary a, Eq a, Num a) => Gen [a]
 decreasingInf = monotonic_ infiniteList negative
 
 -- | Generate nondecreasing values

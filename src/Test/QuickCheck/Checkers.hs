@@ -48,6 +48,7 @@ import Data.Monoid
 import Data.Function (on)
 import Control.Applicative
 import Control.Arrow ((***),first)
+import qualified Control.Exception as Ex
 import Data.List (foldl')
 import System.Random
 import Test.QuickCheck
@@ -89,8 +90,10 @@ checkBatch args (name,tests) =
      mapM_ pr tests
  where
    pr (s,p) = do putStr (padTo (width + 4) ("  "++s ++ ":"))
-                 catch (quickCheckWith args p) print
+                 Ex.catch (quickCheckWith args p) 
+                          (print :: Ex.SomeException -> IO ())
    width    = foldl' max 0 (map (length.fst) tests)
+
 
 padTo :: Int -> String -> String
 padTo n = take n . (++ repeat ' ')
