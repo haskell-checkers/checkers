@@ -431,20 +431,20 @@ monadOr = const ( "MonadOr laws"
    leftCatchP a b = return a `mplus` b =-= return a
 
 
-arrow :: forall (~>) b c d e.
-         ( Arrow (~>)
-         , Show (d ~> e), Show (c ~> d), Show (b ~> c)
+arrow :: forall a b c d e.
+         ( Arrow a
+         , Show (a d e), Show (a c d), Show (a b c)
          , Show b, Show c, Show d, Show e
-         , Arbitrary (d ~> e), Arbitrary (c ~> d), Arbitrary (b ~> c)
+         , Arbitrary (a d e), Arbitrary (a c d), Arbitrary (a b c)
          , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
          , CoArbitrary b, CoArbitrary c, CoArbitrary d
-         , EqProp (b ~> e), EqProp (b ~> d)
-         , EqProp ((b,d) ~> c)
-         , EqProp ((b,d) ~> (c,d)), EqProp ((b,e) ~> (d,e))
-         , EqProp ((b,d) ~> (c,e))
+         , EqProp (a b e), EqProp (a b d)
+         , EqProp (a (b,d) c)
+         , EqProp (a (b,d) (c,d)), EqProp (a (b,e) (d,e))
+         , EqProp (a (b,d) (c,e))
          , EqProp b, EqProp c, EqProp d, EqProp e
          ) =>
-         b ~> (c,d,e) -> TestBatch
+         a b (c,d,e) -> TestBatch
 arrow = const ("arrow laws"
               , [ ("associativity"           , property assocP)
                 , ("arr distributes"         , property arrDistributesP)
@@ -458,37 +458,37 @@ arrow = const ("arrow laws"
                  ]
               )
   where
-    assocP :: b ~> c -> c ~> d -> d ~> e -> Property
+    assocP :: a b c -> a c d -> a d e -> Property
     assocP f g h = ((f >>> g) >>> h) =-= (f >>> (g >>> h))
     
     arrDistributesP :: (b -> c) -> (c -> d) -> Property
-    arrDistributesP f g = ((arr (f >>> g)) :: b ~> d) =-= (arr f >>> arr g)
+    arrDistributesP f g = ((arr (f >>> g)) :: a b d) =-= (arr f >>> arr g)
     
     firstAsFunP :: (b -> c) -> Property
-    firstAsFunP f = (first (arr f) :: (b,d) ~> (c,d)) =-= arr (first f)
+    firstAsFunP f = (first (arr f) :: a (b,d) (c,d)) =-= arr (first f)
 
-    firstKeepCompP :: b ~> c -> c ~> d -> Property
+    firstKeepCompP :: a b c -> a c d -> Property
     firstKeepCompP f g =
-      ((first (f >>> g)) :: ((b,e) ~> (d,e))) =-= (first f >>> first g)
+      ((first (f >>> g)) :: (a (b,e) (d,e))) =-= (first f >>> first g)
  
-    firstIsFstP :: b ~> c -> Property
-    firstIsFstP f = ((first f :: (b,d) ~> (c,d)) >>> arr fst)
+    firstIsFstP :: a b c -> Property
+    firstIsFstP f = ((first f :: a (b,d) (c,d)) >>> arr fst)
                       =-= (arr fst >>> f)
     
-    secondMovesP :: (b ~> c) -> (d -> e) -> Property
+    secondMovesP :: (a b c) -> (d -> e) -> Property
     secondMovesP f g = (first f >>> second (arr g))
                          =-= ((second (arr g)) >>> first f)
 
-arrowChoice :: forall (~>) b c d e.
-               ( ArrowChoice (~>)
-               , Show (b ~> c)
-               , Arbitrary (b ~> c)
+arrowChoice :: forall a b c d e.
+               ( ArrowChoice a
+               , Show (a b c)
+               , Arbitrary (a b c)
                , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
                , CoArbitrary b, CoArbitrary d
-               , EqProp ((Either b d) ~> (Either c e))
-               , EqProp ((Either b d) ~> (Either c d))
+               , EqProp (a (Either b d) (Either c e))
+               , EqProp (a (Either b d) (Either c d))
                ) =>
-               b ~> (c,d,e) -> TestBatch
+               a b (c,d,e) -> TestBatch
 arrowChoice = const ("arrow choice laws"
                     , [ ("left works as funs", property leftAsFunP)
                       , ("right can move"    , property rightMovesP)
@@ -496,10 +496,10 @@ arrowChoice = const ("arrow choice laws"
                     )
   where
     leftAsFunP :: (b -> c) -> Property
-    leftAsFunP f = (left (arr f) :: (Either b d) ~> (Either c d))
+    leftAsFunP f = (left (arr f) :: a (Either b d) (Either c d))
                      =-= arr (left f)
 
-    rightMovesP :: (b ~> c) -> (d -> e) -> Property
+    rightMovesP :: (a b c) -> (d -> e) -> Property
     rightMovesP f g = (left f >>> right (arr g))
                         =-= ((right (arr g)) >>> left f)
 
