@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
 module Test.QuickCheck.Instances.Array where
 
 import Test.QuickCheck
