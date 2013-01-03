@@ -1,0 +1,11 @@
+                            To-do for Checkers
+
++ The two-level notion of test batches in Checkers is proving
+  inconvenient. Change to hierarchical. Example of a hierarchy path:
+  Data.Reactive, Reactive type, applicative laws, Homomorphism.
+
++ Rename "Help" to something more descriptive.
+
++ Generalize monoidMorphism to take a function generator instead of a
+  single function.  Use it to define property that says that 'fmap f' is a
+  monoid morphism for all f.
