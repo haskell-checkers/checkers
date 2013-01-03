@@ -1,5 +1,5 @@
 Name:                checkers
-Version:             0.2.9
+Version:             0.3.0
 Cabal-Version:       >= 1.2
 Synopsis:            Check properties on standard classes and data structures.
 Category:            Testing
@@ -11,7 +11,7 @@ Description:
   .
   Project wiki page: <http://haskell.org/haskellwiki/checkers>
   .
-  &#169; 2008 by Conal Elliott; BSD3 license.
+  &#169; 2008-2013 by Conal Elliott; BSD3 license.
   .
   Contributions from: Thomas Davie.
 Author:              Conal Elliott 
