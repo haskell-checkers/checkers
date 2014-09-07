@@ -51,7 +51,8 @@ import Control.Arrow ((***),first)
 import qualified Control.Exception as Ex
 import Data.List (foldl')
 import System.Random
-import Test.QuickCheck
+import Test.QuickCheck hiding (generate)
+import Test.QuickCheck.Random (QCGen, newQCGen)
 -- import System.IO.Unsafe
 
 import Test.QuickCheck.Gen      (Gen (..)) -- for rand
@@ -442,12 +443,13 @@ arbitrarySatisfying = (arbitrary `suchThat`)
 
 -- | Generate n arbitrary values
 arbs :: Arbitrary a => Int -> IO [a]
-arbs n = fmap (\ rnd -> generate n rnd (vector n)) newStdGen
+
+arbs n = fmap (\ rnd -> generate n rnd (vector n)) newQCGen
 
 -- | Produce n values from a generator
 gens :: Int -> Gen a -> IO [a]
 gens n gen =
-  fmap (\ rnd -> generate 1000 rnd (sequence (replicate n gen))) newStdGen
+  fmap (\ rnd -> generate 1000 rnd (sequence (replicate n gen))) newQCGen
 
 -- The next two are from twanvl:
 
@@ -500,10 +502,10 @@ probablisticPureTests args gen rnd0 ntest nfail stamps
 
 -- TODO: are there QC2 replacements for these QC1 operations?
 
-rand :: Gen StdGen
+rand :: Gen QCGen
 rand = MkGen (\r _ -> r)
 
-generate :: Int -> StdGen -> Gen a -> a
+generate :: Int -> QCGen -> Gen a -> a
 generate n rnd (MkGen m) = m rnd' size
  where
   (size, rnd') = randomR (0, n) rnd

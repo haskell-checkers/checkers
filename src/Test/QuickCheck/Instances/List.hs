@@ -8,7 +8,7 @@ module Test.QuickCheck.Instances.List
        ,decreasingInf,nonincreasingInf
        ) where
 
-import Test.QuickCheck
+import Test.QuickCheck hiding (infiniteList)
 import Test.QuickCheck.Instances.Num
 import Control.Applicative
 
