@@ -22,7 +22,7 @@ module Test.QuickCheck.Classes
   , applicative, applicativeMorphism, semanticApplicative
   , monad, monadMorphism, semanticMonad, monadFunctor
   , monadApplicative, arrow, arrowChoice, traversable
-  , monadPlus, monadOr
+  , monadPlus, monadOr, alternative
   )
   where
 
@@ -429,6 +429,17 @@ monadOr = const ( "MonadOr laws"
 
    leftZeroP k = (mzero >>= k) =-= mzero
    leftCatchP a b = return a `mplus` b =-= return a
+
+-- | Check Alternative Monoid laws
+alternative :: forall f a. ( Alternative f, Arbitrary a, Arbitrary (f a)
+                           , EqProp (f a), Show (f a)) =>
+               f a -> TestBatch
+alternative = const ( "Alternative laws"
+                    , [ ("left identity", leftId (<|>) (empty :: f a))
+                      , ("right identity", rightId (<|>) (empty :: f a))
+                      , ("associativity", isAssoc ((<|>) :: Binop (f a)))
+                      ]
+                    )
 
 
 arrow :: forall a b c d e.
