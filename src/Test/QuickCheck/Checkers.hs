@@ -21,7 +21,7 @@ module Test.QuickCheck.Checkers
   -- * Misc
     Test, TestBatch, unbatch, checkBatch, quickBatch, verboseBatch
   -- , probablisticPureCheck
-  , Unop, Binop, genR, inverseL, inverse
+  , Unop, Binop, genR, involution, inverseL, inverse
   , FracT, NumT, OrdT, T
   -- * Generalized equality
   , EqProp(..), eq
@@ -150,6 +150,10 @@ type T     = Char
 genR :: Random a => (a, a) -> Gen a
 genR (lo,hi) = fmap (fst . randomR (lo,hi)) rand
 
+-- | @f@ is its own inverse. See also 'inverse'.
+involution :: (Show a, Arbitrary a, EqProp a) =>
+              (a -> a) -> Property
+involution f = f `inverseL` f
 
 -- | @f@ is a left inverse of @g@.  See also 'inverse'.
 inverseL :: (EqProp b, Arbitrary b, Show b) =>
