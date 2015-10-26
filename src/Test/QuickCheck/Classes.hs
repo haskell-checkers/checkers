@@ -8,10 +8,10 @@
 -- Module      :  Test.QuickCheck.Classes
 -- Copyright   :  (c) Conal Elliott 2008
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  conal@conal.net
 -- Stability   :  experimental
--- 
+--
 -- Some QuickCheck properties for standard type classes
 ----------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ ord = ordRel (<=)
 
 
 -- | 'Ord' morphism properties.  @h@ is an 'Ord' morphism iff:
--- 
+--
 -- >    a <= b = h a <= h b
 -- >
 -- >    h (a `min` b) = h a `min` h b
@@ -76,7 +76,7 @@ ordMorphism h = ( "ord morphism"
  where
    distrib  :: (forall c. Ord c => c -> c -> c) -> Property
    distrib  op = property $ \ u v -> h (u `op` v) =-= h u `op` h v
-   
+
    distrib' :: EqProp d => (forall c. Ord c => c -> c -> d) -> Property
    distrib' op = property $ \ u v -> u `op` v =-= h u `op` h v
 
@@ -143,7 +143,7 @@ functorMonoid = const ("functor-monoid"
     binopP :: (a->b) -> (m a) -> (m a) -> Property
     binopP f u v = (fmap f) (u `mappend` v) =-= (fmap f u) `mappend` (fmap f v)
 
--- <camio> There I have an attempt at doing this. I eventually implemented 
+-- <camio> There I have an attempt at doing this. I eventually implemented
 -- those semanticMorphisms as their own functions. I'm not too thrilled with
 -- that implementation, but it works.
 
@@ -164,15 +164,15 @@ functor = const ( "functor"
  where
    identityP :: Property
    composeP  :: (b -> c) -> (a -> b) -> Property
-   
+
    identityP = fmap id =-= (id :: m a -> m a)
    composeP g f = fmap g . fmap f =-= (fmap (g.f) :: m a -> m c)
 
 -- Note the similarity between 'functor' and 'monoidMorphism'.  The
 -- functor laws say that 'fmap' is a homomorphism w.r.t '(.)':
--- 
+--
 --   functor = const ("functor", homomorphism endoMonoidD endoMonoidD fmap)
--- 
+--
 -- However, I don't think the types can work out, since 'fmap' is used at
 -- three different types.
 
@@ -232,7 +232,7 @@ applicative = const ( "applicative"
    homomorphismP :: (a -> b) -> a -> Property
    interchangeP  :: m (a -> b) -> a -> Property
    functorP      :: (a -> b) -> m a -> Property
-   
+
    identityP v        = (pure id <*> v) =-= v
    compositionP u v w = (pure (.) <*> u <*> v <*> w) =-= (u <*> (v <*> w))
    homomorphismP f x  = (pure f <*> pure x) =-= (pure (f x) :: m b)
@@ -255,7 +255,7 @@ applicativeMorphism q =
  where
    pureP  :: NumT -> Property
    applyP :: f (NumT->T) -> f NumT -> Property
-   
+
    pureP a = q (pure a) =-= pure a
    applyP mf mx = q (mf <*> mx) =-= (q mf <*> q mx)
 
@@ -292,7 +292,7 @@ monad = const ( "monad laws"
    leftP  :: (a -> m b) -> a -> Property
    rightP :: m a -> Property
    assocP :: m a -> (a -> m b) -> (b -> m c) -> Property
-   
+
    leftP f a    = (return a >>= f)  =-= f a
    rightP m     = (m >>= return)    =-=  m
    assocP m f g = ((m >>= f) >>= g) =-= (m >>= (\x -> f x >>= g))
@@ -350,7 +350,7 @@ monadMorphism q =
    returnP :: NumT -> Property
    bindP :: f NumT -> (NumT -> f T) -> Property
    joinP :: f (f (NumT->T)) -> Property
-   
+
    returnP a = q (return a) =-= return a
    bindP u k = q (u >>= k)  =-= (q u >>= q . k)
    joinP uu  = q (join uu)  =-= join (fmap q (q uu))
@@ -471,21 +471,21 @@ arrow = const ("arrow laws"
   where
     assocP :: a b c -> a c d -> a d e -> Property
     assocP f g h = ((f >>> g) >>> h) =-= (f >>> (g >>> h))
-    
+
     arrDistributesP :: (b -> c) -> (c -> d) -> Property
     arrDistributesP f g = ((arr (f >>> g)) :: a b d) =-= (arr f >>> arr g)
-    
+
     firstAsFunP :: (b -> c) -> Property
     firstAsFunP f = (first (arr f) :: a (b,d) (c,d)) =-= arr (first f)
 
     firstKeepCompP :: a b c -> a c d -> Property
     firstKeepCompP f g =
       ((first (f >>> g)) :: (a (b,e) (d,e))) =-= (first f >>> first g)
- 
+
     firstIsFstP :: a b c -> Property
     firstIsFstP f = ((first f :: a (b,d) (c,d)) >>> arr fst)
                       =-= (arr fst >>> f)
-    
+
     secondMovesP :: (a b c) -> (d -> e) -> Property
     secondMovesP f g = (first f >>> second (arr g))
                          =-= ((second (arr g)) >>> first f)

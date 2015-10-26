@@ -8,9 +8,9 @@ module Test.QuickCheck.Instances
        ,module Test.QuickCheck.Instances.Ord
        ,module Test.QuickCheck.Instances.Tuple
        ) where
-       
+
 import Test.QuickCheck.Instances.Array ()
-import Test.QuickCheck.Instances.Char 
+import Test.QuickCheck.Instances.Char
 import Test.QuickCheck.Instances.Eq
 import Test.QuickCheck.Instances.List
 import Test.QuickCheck.Instances.Maybe

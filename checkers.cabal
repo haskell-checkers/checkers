@@ -12,7 +12,7 @@ Description:
   &#169; 2008-2013 by Conal Elliott; BSD3 license.
   .
   Contributions from: Thomas Davie.
-Author:              Conal Elliott 
+Author:              Conal Elliott
 Maintainer:          conal@conal.net
 Copyright:           (c) 2008-2013 by Conal Elliott
 License:             BSD3
@@ -28,7 +28,7 @@ Library
   hs-Source-Dirs:      src
   Extensions:
   Build-Depends:       base < 5, random, QuickCheck>=2.3 && <2.9, array >= 0.1
-  Exposed-Modules:     
+  Exposed-Modules:
                        Test.QuickCheck.Utils
                        Test.QuickCheck.Checkers
                        Test.QuickCheck.Classes
