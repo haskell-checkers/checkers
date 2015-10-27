@@ -9,10 +9,10 @@
 -- Module      :  Test.QuickCheck.Checkers
 -- Copyright   :  (c) Conal Elliott 2007,2008
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  conal@conal.net
 -- Stability   :  experimental
--- 
+--
 -- Some QuickCheck helpers
 ----------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ checkBatch args (name,tests) =
      mapM_ pr tests
  where
    pr (s,p) = do putStr (padTo (width + 4) ("  "++s ++ ":"))
-                 Ex.catch (quickCheckWith args p) 
+                 Ex.catch (quickCheckWith args p)
                           (print :: Ex.SomeException -> IO ())
    width    = foldl' max 0 (map (length.fst) tests)
 
@@ -102,7 +102,7 @@ padTo n = take n . (++ repeat ' ')
 -- | Check a batch tersely.
 quickBatch :: TestBatch -> IO ()
 quickBatch = checkBatch quick'
- 
+
 -- | Check a batch verbosely.
 verboseBatch :: TestBatch -> IO ()
 verboseBatch = checkBatch verbose'
@@ -158,7 +158,7 @@ involution f = f `inverseL` f
 -- | @f@ is a left inverse of @g@.  See also 'inverse'.
 inverseL :: (EqProp b, Arbitrary b, Show b) =>
             (a -> b) -> (b -> a) -> Property
-f `inverseL` g = f . g =-= id 
+f `inverseL` g = f . g =-= id
 
 -- | @f@ is a left and right inverse of @g@.  See also 'inverseL'.
 inverse :: ( EqProp a, Arbitrary a, Show a

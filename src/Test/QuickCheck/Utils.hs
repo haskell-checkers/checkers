@@ -4,7 +4,7 @@
 -- Module      :  Test.QuickCheck.Utils
 -- Copyright   :  (c) Andy Gill 2001
 -- License     :  BSD-style (see the file libraries/base/LICENSE)
--- 
+--
 -- Maintainer  :  libraries@haskell.org
 -- Stability   :  experimental
 -- Portability :  portable
@@ -26,9 +26,9 @@ import Prelude
 
 import Test.QuickCheck
 
-isAssociativeBy :: (Show a,Testable prop) 
+isAssociativeBy :: (Show a,Testable prop)
 		=> (a -> a -> prop) -> Gen a -> (a -> a -> a) -> Property
-isAssociativeBy (=~=) src (#) = 
+isAssociativeBy (=~=) src (#) =
      	forAll src $ \ a ->
      	forAll src $ \ b ->
      	forAll src $ \ c ->
@@ -37,7 +37,7 @@ isAssociativeBy (=~=) src (#) =
 isAssociative :: (Arbitrary a,Show a,Eq a) => (a -> a -> a) -> Property
 isAssociative = isAssociativeBy (==) arbitrary
 
-isCommutableBy :: (Show a,Testable prop) 
+isCommutableBy :: (Show a,Testable prop)
 	       => (b -> b -> prop) -> Gen a -> (a -> a -> b) -> Property
 isCommutableBy (=~=) src (#) =
 	forAll src $ \ a ->
@@ -48,7 +48,7 @@ isCommutable :: (Arbitrary a,Show a,Eq b) => (a -> a -> b) -> Property
 isCommutable = isCommutableBy (==) arbitrary
 
 isTotalOrder :: (Arbitrary a,Show a,Ord a) => a -> a -> Property
-isTotalOrder x y = 
+isTotalOrder x y =
     classify (x > y)  "less than" $
     classify (x == y) "equals" $
     classify (x < y)  "greater than" $

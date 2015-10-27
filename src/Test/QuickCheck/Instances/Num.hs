@@ -1,4 +1,4 @@
-module Test.QuickCheck.Instances.Num 
+module Test.QuickCheck.Instances.Num
        (nonNegative,nonPositive
        ,negative,positive
        ,nonZero,nonZero_

@@ -4,10 +4,10 @@
 -- Module      :  Data.Later
 -- Copyright   :  (c) David Sankel 2008
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  david@sankelsoftware.com
 -- Stability   :  experimental
--- 
+--
 -- Later. Allows for testing of functions that depend on the order of
 -- evaluation.
 --
@@ -45,7 +45,7 @@ isCommutTimes d (#) =
            del t1 # del t2 =-= del t2 # del t1
 
 -- Note that we delay v by t1 and by t2 twice.
--- 
+--
 -- TODO: make sure CSE isn't kicking in.  Examine the core code.
 
 -- | Is the given function associative when restricted to the same value
@@ -75,7 +75,7 @@ delay d a = eventually $ threadDelay (round (1.0e6 * d)) >> return a
 
 -- | A value that is never available.  Rerun of @hang@ from unamb, but
 -- replicated to avoid mutual dependency.
--- 
+--
 -- TODO: Remove when this module is moved into the unamb-test package.
 delayForever :: a
 delayForever = unsafePerformIO $ do _ <- forever (threadDelay maxBound)
