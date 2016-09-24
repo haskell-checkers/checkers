@@ -185,6 +185,7 @@ a `eq` a' = property (a == a')
 --   instance EqProp a where (=-=) = eq
 -- E.g.,
 
+instance EqProp ()     where (=-=) = eq
 instance EqProp Bool   where (=-=) = eq
 instance EqProp Char   where (=-=) = eq
 instance EqProp Int    where (=-=) = eq
