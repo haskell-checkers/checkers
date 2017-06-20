@@ -207,7 +207,7 @@ semanticFunctor :: forall f g.
 semanticFunctor = const (functorMorphism (model1 :: forall b. f b -> g b))
 
 
--- | Properties to check that the 'Applicative' @m@ satisfies the monad
+-- | Properties to check that the 'Applicative' @m@ satisfies the applicative
 -- properties
 applicative :: forall m a b c.
                ( Applicative m
