@@ -369,11 +369,11 @@ class Model a b | a -> b where
 
 meq  :: (Model a b, EqProp b) => a -> b -> Property
 meq1 :: (Model a b, Model a1 b1, EqProp b) =>
-	(a1 -> a) -> (b1 -> b) -> a1 -> Property
+        (a1 -> a) -> (b1 -> b) -> a1 -> Property
 meq2 :: (Model a b, Model a1 b1, Model a2 b2, EqProp b) =>
-	(a1 -> a2 -> a) -> (b1 -> b2 -> b) -> a1 -> a2 -> Property
+        (a1 -> a2 -> a) -> (b1 -> b2 -> b) -> a1 -> a2 -> Property
 meq3 :: (Model a b, Model a1 b1, Model a2 b2, Model a3 b3, EqProp b) =>
-	(a1 -> a2 -> a3 -> a)
+        (a1 -> a2 -> a3 -> a)
      -> (b1 -> b2 -> b3 -> b)
      -> a1 -> a2 -> a3 -> Property
 meq4 :: ( Model a b, Model a1 b1, Model a2 b2
@@ -383,7 +383,7 @@ meq4 :: ( Model a b, Model a1 b1, Model a2 b2
      -> a1 -> a2 -> a3 -> a4 -> Property
 meq5 :: ( Model a b, Model a1 b1, Model a2 b2, Model a3 b3
         , Model a4 b4, Model a5 b5, EqProp b) =>
-	(a1 -> a2 -> a3 -> a4 -> a5 -> a)
+        (a1 -> a2 -> a3 -> a4 -> a5 -> a)
      -> (b1 -> b2 -> b3 -> b4 -> b5 -> b)
      -> a1 -> a2 -> a3 -> a4 -> a5 -> Property
 

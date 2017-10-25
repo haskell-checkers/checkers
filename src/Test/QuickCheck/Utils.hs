@@ -27,22 +27,22 @@ import Prelude
 import Test.QuickCheck
 
 isAssociativeBy :: (Show a,Testable prop)
-		=> (a -> a -> prop) -> Gen a -> (a -> a -> a) -> Property
+                => (a -> a -> prop) -> Gen a -> (a -> a -> a) -> Property
 isAssociativeBy (=~=) src (#) =
-     	forAll src $ \ a ->
-     	forAll src $ \ b ->
-     	forAll src $ \ c ->
-	((a # b) # c) =~= (a # (b # c))
+        forAll src $ \ a ->
+        forAll src $ \ b ->
+        forAll src $ \ c ->
+        ((a # b) # c) =~= (a # (b # c))
 
 isAssociative :: (Arbitrary a,Show a,Eq a) => (a -> a -> a) -> Property
 isAssociative = isAssociativeBy (==) arbitrary
 
 isCommutableBy :: (Show a,Testable prop)
-	       => (b -> b -> prop) -> Gen a -> (a -> a -> b) -> Property
+               => (b -> b -> prop) -> Gen a -> (a -> a -> b) -> Property
 isCommutableBy (=~=) src (#) =
-	forAll src $ \ a ->
-	forAll src $ \ b ->
-	(a # b) =~= (b # a)
+        forAll src $ \ a ->
+        forAll src $ \ b ->
+        (a # b) =~= (b # a)
 
 isCommutable :: (Arbitrary a,Show a,Eq b) => (a -> a -> b) -> Property
 isCommutable = isCommutableBy (==) arbitrary
