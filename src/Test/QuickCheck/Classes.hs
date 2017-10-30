@@ -19,15 +19,21 @@ module Test.QuickCheck.Classes
   ( ordRel, ord, ordMorphism, semanticOrd
   , monoid, monoidMorphism, semanticMonoid
   , functor, functorMorphism, semanticFunctor, functorMonoid
+  , apply, applyMorphism, semanticApply
   , applicative, applicativeMorphism, semanticApplicative
+  , bind, bindMorphism, semanticBind, bindApply
   , monad, monadMorphism, semanticMonad, monadFunctor
   , monadApplicative, arrow, arrowChoice, traversable
-  , monadPlus, monadOr, alternative
+  , monadPlus, monadOr, alt, alternative
   )
   where
 
-import Data.Monoid
 import Data.Foldable (foldMap)
+import Data.Functor.Apply (Apply ((<.>)))
+import Data.Functor.Alt (Alt ((<!>)))
+import Data.Functor.Bind (Bind ((>>-)), apDefault)
+import qualified Data.Functor.Bind as B (Bind (join))
+import Data.Monoid (Monoid (mappend, mempty))
 import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
 import Control.Applicative
 import Control.Monad (MonadPlus (..), ap, join)
@@ -207,6 +213,64 @@ semanticFunctor :: forall f g.
 semanticFunctor = const (functorMorphism (model1 :: forall b. f b -> g b))
 
 
+-- | Properties to check that the 'Apply' @m@ satisfies the apply
+-- properties
+apply :: forall m a b c.
+         ( Apply m
+         , Arbitrary a, CoArbitrary a, Arbitrary b, CoArbitrary b
+         , Arbitrary c, Arbitrary (m a)
+         , Arbitrary (m (b -> c)), Show (m (b -> c))
+         , Arbitrary (m (a -> b)), Show (m (a -> b))
+         , Show a, Show (m a)
+         , EqProp (m a), EqProp (m b), EqProp (m c)
+         ) =>
+         m (a,b,c) -> TestBatch
+apply = const ( "apply"
+              , [ ("associativity", property associativityP)
+                , ("left"       , property leftP)
+                , ("right"      , property rightP)
+                ]
+              )
+ where
+   associativityP :: m (b -> c) -> m (a -> b) -> m a -> Property
+   rightP         :: (b -> c) -> m (a -> b) -> m a -> Property
+   leftP          :: (a -> b) -> m (b -> c) -> m a -> Property
+
+   associativityP u v w = ((.) <$> u <.> v <.> w) =-= (u <.> (v <.> w))
+   leftP f x y          = (x <.> (f <$> y)) =-= ((. f) <$> x <.> y)
+   rightP f x y         = (f <$> (x <.> y)) =-= ((f .) <$> x <.> y)
+
+
+-- | 'Apply' morphism properties
+applyMorphism :: forall f g.
+                 ( Apply f, Apply g
+                 , Show (f NumT), Arbitrary (f NumT)
+                 , EqProp (g NumT), EqProp (g T)
+                 , Show (f (NumT -> T))
+                 , Arbitrary (f (NumT -> T))
+                 ) =>
+                 (forall a. f a -> g a) -> TestBatch
+applyMorphism q =
+  ( "apply morphism"
+  , [ ("apply", property applyP)] )
+ where
+   applyP :: f (NumT->T) -> f NumT -> Property
+   applyP mf mx = q (mf <.> mx) =-= (q mf <.> q mx)
+
+
+-- | The semantic function ('model1') for @f@ is an 'applyMorphism'.
+semanticApply :: forall f g.
+                 ( Model1 f g
+                 , Apply f, Apply g
+                 , Arbitrary (f NumT), Arbitrary (f (NumT -> T))
+                 , EqProp (g NumT), EqProp (g T)
+                 , Show (f NumT), Show (f (NumT -> T))
+                 ) =>
+                 f () -> TestBatch
+semanticApply =
+  const (applyMorphism (model1 :: forall b. f b -> g b))
+
+
 -- | Properties to check that the 'Applicative' @m@ satisfies the applicative
 -- properties
 applicative :: forall m a b c.
@@ -271,6 +335,82 @@ semanticApplicative :: forall f g.
   f () -> TestBatch
 semanticApplicative =
   const (applicativeMorphism (model1 :: forall b. f b -> g b))
+
+
+-- | Properties to check that the 'bind' @m@ satisfies the bind properties
+bind :: forall m a b c.
+        ( Bind m
+        , Show a, Arbitrary a, CoArbitrary a, Arbitrary b, CoArbitrary b
+        , Arbitrary (m a), EqProp (m a), Show (m a)
+        , Arbitrary (m b), EqProp (m b)
+        , Arbitrary (m c), EqProp (m c)
+        , Arbitrary (m (m (m a))), Show (m (m (m a)))
+        ) =>
+        m (a,b,c) -> TestBatch
+bind = const ( "bind laws"
+              , [ ("join associativity", property joinAssocP)
+                , ("bind associativity", property bindAssocP)
+                ]
+              )
+ where
+   bindAssocP :: m a -> (a -> m b) -> (b -> m c) -> Property
+   joinAssocP :: m (m (m a)) -> Property
+
+   bindAssocP m f g = ((m >>- f) >>- g) =-= (m >>- (\x -> f x >>- g))
+   joinAssocP mmma = B.join (B.join mmma) =-= B.join (fmap B.join mmma)
+
+bindApply :: forall m a b.
+             ( Apply m, Bind m
+             , EqProp (m a), EqProp (m b)
+             , Show a, Arbitrary a
+             , Show (m a), Arbitrary (m a)
+             , Show (m (a -> b)), Arbitrary (m (a -> b))) =>
+             m (a, b) -> TestBatch
+bindApply = const ( "bind apply"
+                  , [ ("ap", property apP) ]
+                  )
+ where
+   apP :: m (a -> b) -> m a -> Property
+   apP f x = (f <.> x) =-= (f `apDefault` x)
+
+-- | 'bind' morphism properties
+bindMorphism :: forall f g.
+                ( Bind f, Bind g, Functor g
+                , Show (f NumT)
+                , Show (f (NumT -> T))
+                , Show (f (f (NumT -> T)))
+                , Arbitrary (f NumT), Arbitrary (f T)
+                , Arbitrary (f (NumT -> T))
+                , Arbitrary (f (f (NumT -> T)))
+                , EqProp (g NumT), EqProp (g T)
+                , EqProp (g (NumT -> T))
+                ) =>
+                (forall a. f a -> g a) -> TestBatch
+bindMorphism q =
+  ( "bind morphism"
+  , [ ("bind", property bindP), ("join", property joinP) ] )
+ where
+   bindP :: f NumT -> (NumT -> f T) -> Property
+   joinP :: f (f (NumT->T)) -> Property
+
+   bindP u k = q (u >>- k)  =-= (q u >>- q . k)
+   joinP uu  = q (B.join uu)  =-= B.join (fmap q (q uu))
+
+-- | The semantic function ('model1') for @f@ is a 'bindMorphism'.
+semanticBind :: forall f g.
+  ( Model1 f g
+  , Bind f, Bind g
+  , EqProp (g T) , EqProp (g NumT)
+  , EqProp (g (NumT -> T))
+  , Arbitrary (f T) , Arbitrary (f NumT)
+  , Arbitrary (f (f (NumT -> T)))
+  , Arbitrary (f (NumT -> T))
+  , Show (f (f (NumT -> T)))
+  , Show (f (NumT -> T)) , Show (f NumT)
+  , Functor g
+  ) =>
+  f () -> TestBatch
+semanticBind = const (bindMorphism (model1 :: forall b. f b -> g b))
 
 
 -- | Properties to check that the 'Monad' @m@ satisfies the monad properties
@@ -429,6 +569,14 @@ monadOr = const ( "MonadOr laws"
 
    leftZeroP k = (mzero >>= k) =-= mzero
    leftCatchP a b = return a `mplus` b =-= return a
+
+-- | Check Alt Semigroup law
+alt :: forall f a. ( Alt f, Arbitrary a, Arbitrary (f a)
+                   , EqProp (f a), Show (f a)) =>
+       f a -> TestBatch
+alt = const ( "Alt laws"
+            , [ ("associativity", isAssoc ((<!>) :: Binop (f a))) ] )
+
 
 -- | Check Alternative Monoid laws
 alternative :: forall f a. ( Alternative f, Arbitrary a, Arbitrary (f a)
