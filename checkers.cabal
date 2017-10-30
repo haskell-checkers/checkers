@@ -27,7 +27,7 @@ source-repository head
 Library
   hs-Source-Dirs:      src
   Extensions:
-  Build-Depends:       base < 5, random, QuickCheck>=2.3, array >= 0.1
+  Build-Depends:       base < 5, random, QuickCheck>=2.3, array >= 0.1, semigroupoids >= 5 && < 6
   Exposed-Modules:
                        Test.QuickCheck.Utils
                        Test.QuickCheck.Checkers
