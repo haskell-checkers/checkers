@@ -44,7 +44,6 @@ module Test.QuickCheck.Checkers
   ) where
 
 -- import Data.Function (on)
-import Data.Monoid
 import Data.Function (on)
 import Control.Applicative
 import Control.Arrow ((***),first)

@@ -6,7 +6,6 @@ module Test.QuickCheck.Instances.Num
 
 import Test.QuickCheck
 import Control.Monad.Extensions
-import Control.Applicative
 
 nonNegative :: (Num a, Arbitrary a) => Gen a
 nonNegative = abs <$> arbitrary
