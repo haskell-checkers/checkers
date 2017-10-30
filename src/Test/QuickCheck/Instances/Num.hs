@@ -4,6 +4,7 @@ module Test.QuickCheck.Instances.Num
        ,nonZero,nonZero_
        ) where
 
+import Control.Applicative ((<$>))
 import Test.QuickCheck
 import Control.Monad.Extensions
 
