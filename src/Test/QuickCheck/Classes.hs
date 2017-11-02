@@ -28,6 +28,7 @@ module Test.QuickCheck.Classes
   )
   where
 
+import Control.Applicative ((<$>))
 import Data.Foldable (foldMap)
 import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))

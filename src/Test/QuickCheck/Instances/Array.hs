@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
 module Test.QuickCheck.Instances.Array where
 
+import Control.Applicative ((<$>))
 import Test.QuickCheck
 import Data.Array
 
