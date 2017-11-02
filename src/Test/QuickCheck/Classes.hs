@@ -134,7 +134,8 @@ functorMonoid :: forall m a b.
   ( Functor m
   , Monoid (m a)
   , Monoid (m b)
-  , Arbitrary (a->b)
+  , CoArbitrary a
+  , Arbitrary b
   , Arbitrary (m a)
   , Show (m a)
   , EqProp (m b)) =>
