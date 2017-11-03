@@ -1,5 +1,5 @@
 Name:                checkers
-Version:             0.4.9.3
+Version:             0.4.9.4
 Cabal-Version:       >= 1.6
 Synopsis:            Check properties on standard classes and data structures.
 Category:            Testing
@@ -10,8 +10,6 @@ Description:
   for common data types.
   .
   &#169; 2008-2013 by Conal Elliott; BSD3 license.
-  .
-  Contributions from: Thomas Davie.
 Author:              Conal Elliott
 Maintainer:          conal@conal.net
 Copyright:           (c) 2008-2013 by Conal Elliott
