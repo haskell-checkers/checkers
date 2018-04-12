@@ -17,6 +17,7 @@
 
 module Test.QuickCheck.Classes
   ( ordRel, ord, ordMorphism, semanticOrd
+  , semigroup
   , monoid, monoidMorphism, semanticMonoid
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , apply, applyMorphism, semanticApply
@@ -34,6 +35,7 @@ import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
 import Data.Functor.Bind (Bind ((>>-)), apDefault)
 import qualified Data.Functor.Bind as B (Bind (join))
+import Data.Semigroup (Semigroup ((<>)))
 import Data.Monoid (Monoid (mappend, mempty))
 import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
 import Control.Applicative
@@ -111,6 +113,16 @@ monoid = const ( "monoid"
                  , ("associativity" , isAssoc (mappend :: Binop a))
                  ]
                )
+
+-- | Properties to check that the 'Semigroup' 'a' satisfies the semigroup
+-- properties.  The argument value is ignored and is present only for its
+-- type.
+semigroup :: forall a. (Semigroup a, Show a, Arbitrary a, EqProp a) =>
+             a -> TestBatch
+semigroup = const ( "semigroup"
+                  , [("associativity", isAssoc ((<>) :: Binop a))
+                    ]
+                  )
 
 -- | Monoid homomorphism properties.  See also 'homomorphism'.
 monoidMorphism :: (Monoid a, Monoid b, EqProp b, Show a, Arbitrary a) =>
