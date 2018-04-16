@@ -27,6 +27,10 @@ Library
   hs-Source-Dirs:      src
   Extensions:
   Build-Depends:       base >= 4 && < 5, random, QuickCheck>=2.3, array >= 0.1, semigroupoids >= 5 && < 6
+  if !impl(ghc >= 8.0)
+    build-depends:
+      semigroups          >= 0.18.4  && < 0.19
+
   Exposed-Modules:
                        Test.QuickCheck.Utils
                        Test.QuickCheck.Checkers
