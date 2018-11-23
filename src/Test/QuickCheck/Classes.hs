@@ -694,9 +694,9 @@ traversable = const ( "traversable"
    fmapP f x = f `fmap` x =-= f `fmapDefault` x
    foldMapP f x = f `foldMap` x =-= f `foldMapDefault` x
 
-foldable :: forall t a b m n.
-            ( Foldable t, CoArbitrary a, CoArbitrary b, Arbitrary b, Arbitrary (t a), Show b, Show (t a), EqProp b, Monoid m, Arbitrary (t m), Show (t m), EqProp m, Arbitrary (t n), Show (t n), Num n, EqProp n, Arbitrary a, Show a, Eq a) =>
-            t (a, b, m, n) -> TestBatch
+foldable :: forall t a b m n o.
+            ( Foldable t, CoArbitrary a, CoArbitrary b, Arbitrary b, Arbitrary (t a), Show b, Show (t a), EqProp b, Monoid m, Arbitrary (t m), Show (t m), EqProp m, Arbitrary (t n), Show (t n), Num n, EqProp n, Arbitrary a, Show a, Eq a, Ord o, Arbitrary (t o), Show (t o), EqProp o, EqProp a) =>
+            t (a, b, m, n, o) -> TestBatch
 foldable = const ( "foldable"
                  , [ ("foldr and foldMap", property foldrFoldMapP)
                    , ("foldl and foldMap", property foldlFoldMapP)
@@ -704,11 +704,10 @@ foldable = const ( "foldable"
                    , ("length", property lengthP)
                    , ("sum", property sumP)
                    , ("product", property productP)
-                   -- maximum: Requires non-empty t
-                   -- minimum
-                   -- foldr1
-                   -- foldl1
-                   -- toList
+                   , ("maximum", property maximumP)
+                   , ("minimum", property minimumP)
+                   , ("foldr1", property foldr1P)
+                   , ("foldl1", property foldl1P)
                    -- foldr': how to check strictness
                    -- foldl': how to check strictness
                    , ("elem", property elemP)
@@ -727,6 +726,14 @@ foldable = const ( "foldable"
     sumP t = sum t =-= (getSum . foldMap Sum) t
     productP :: t n -> Property
     productP t = product t =-= (getProduct . foldMap Product) t
+    maximumP :: t o -> Property
+    maximumP t = not (null t) ==> maximum t =-= maximum (toList t)
+    minimumP :: t o -> Property
+    minimumP t = not (null t) ==> minimum t =-= minimum (toList t)
+    foldr1P :: (a -> a -> a) -> t a -> Property
+    foldr1P f t = not (null t) ==> foldr1 f t =-= foldr1 f (toList t)
+    foldl1P :: (a -> a -> a) -> t a -> Property
+    foldl1P f t = not (null t) ==> foldl1 f t =-= foldl1 f (toList t)
     elemP :: a -> t a -> Property
     elemP a t = elem a t =-= elem a (toList t)
 
