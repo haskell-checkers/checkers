@@ -24,19 +24,19 @@ module Test.QuickCheck.Classes
   , applicative, applicativeMorphism, semanticApplicative
   , bind, bindMorphism, semanticBind, bindApply
   , monad, monadMorphism, semanticMonad, monadFunctor
-  , monadApplicative, arrow, arrowChoice, traversable
+  , monadApplicative, arrow, arrowChoice, foldable, traversable
   , monadPlus, monadOr, alt, alternative
   )
   where
 
 import Control.Applicative ((<$>))
-import Data.Foldable (foldMap)
+import Data.Foldable (Foldable(..))
 import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
 import Data.Functor.Bind (Bind ((>>-)), apDefault)
 import qualified Data.Functor.Bind as B (Bind (join))
 import Data.Semigroup (Semigroup ((<>)))
-import Data.Monoid (Monoid (mappend, mempty))
+import Data.Monoid (Monoid (mappend, mempty), Endo(..), Dual(..), Sum(..), Product(..))
 import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
 import Control.Applicative
 import Control.Monad (MonadPlus (..), ap, join)
@@ -693,3 +693,49 @@ traversable = const ( "traversable"
 
    fmapP f x = f `fmap` x =-= f `fmapDefault` x
    foldMapP f x = f `foldMap` x =-= f `foldMapDefault` x
+
+foldable :: forall t a b m n o.
+            ( Foldable t, CoArbitrary a, CoArbitrary b, Arbitrary b, Arbitrary (t a), Show b, Show (t a), EqProp b, Monoid m, Arbitrary (t m), Show (t m), EqProp m, Arbitrary (t n), Show (t n), Num n, EqProp n, Arbitrary a, Show a, Eq a, Ord o, Arbitrary (t o), Show (t o), EqProp o, EqProp a) =>
+            t (a, b, m, n, o) -> TestBatch
+foldable = const ( "foldable"
+                 , [ ("foldr and foldMap", property foldrFoldMapP)
+                   , ("foldl and foldMap", property foldlFoldMapP)
+                   , ("fold and foldMap", property foldFoldMapP)
+                   , ("length", property lengthP)
+                   , ("sum", property sumP)
+                   , ("product", property productP)
+                   , ("maximum", property maximumP)
+                   , ("minimum", property minimumP)
+                   , ("foldr1", property foldr1P)
+                   , ("foldl1", property foldl1P)
+                   -- foldr': how to check strictness
+                   -- foldl': how to check strictness
+                   , ("elem", property elemP)
+                   ]
+                 )
+  where
+    foldrFoldMapP :: (a -> b -> b) -> b -> t a -> Property
+    foldrFoldMapP f z t = foldr f z t =-= appEndo (foldMap (Endo . f) t ) z
+    foldlFoldMapP :: (b -> a -> b) -> b -> t a -> Property
+    foldlFoldMapP f z t = foldl f z t =-= appEndo (getDual (foldMap (Dual . Endo . flip f) t)) z
+    foldFoldMapP :: t m -> Property
+    foldFoldMapP t = fold t =-= foldMap id t
+    lengthP :: t a -> Property
+    lengthP t = length t =-= (getSum . foldMap (Sum . const  1)) t
+    sumP :: t n -> Property
+    sumP t = sum t =-= (getSum . foldMap Sum) t
+    productP :: t n -> Property
+    productP t = product t =-= (getProduct . foldMap Product) t
+    maximumP :: t o -> Property
+    maximumP t = not (null t) ==> maximum t =-= maximum (toList t)
+    minimumP :: t o -> Property
+    minimumP t = not (null t) ==> minimum t =-= minimum (toList t)
+    foldr1P :: (a -> a -> a) -> t a -> Property
+    foldr1P f t = not (null t) ==> foldr1 f t =-= foldr1 f (toList t)
+    foldl1P :: (a -> a -> a) -> t a -> Property
+    foldl1P f t = not (null t) ==> foldl1 f t =-= foldl1 f (toList t)
+    elemP :: a -> t a -> Property
+    elemP a t = elem a t =-= elem a (toList t)
+
+-- foldableFunctor
+-- foldMap f = fold . fmap f
