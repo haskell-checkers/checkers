@@ -711,8 +711,8 @@ foldable = const ( "foldable"
                    , ("minimum", property minimumP)
                    , ("foldr1", property foldr1P)
                    , ("foldl1", property foldl1P)
-                   -- foldr': how to check strictness
-                   -- foldl': how to check strictness
+                   , ("foldr'", property foldr'P)
+                   , ("foldl'", property foldl'P)
                    , ("elem", property elemP)
                    ]
                  )
@@ -742,6 +742,12 @@ foldable = const ( "foldable"
     foldr1P f t = not (null t) ==> foldr1 f t =-= foldr1 f (toList t)
     foldl1P :: (a -> a -> a) -> t a -> Property
     foldl1P f t = not (null t) ==> foldl1 f t =-= foldl1 f (toList t)
+    -- TODO: Check strictness
+    foldr'P :: (a -> b -> b) -> b -> t a -> Property
+    foldr'P f z t = foldr' f z t =-= foldr' f z (toList t)
+    -- TODO: Check strictness
+    foldl'P :: (b -> a -> b) -> b -> t a -> Property
+    foldl'P f z t = foldl' f z t =-= foldl' f z (toList t)
     elemP :: a -> t a -> Property
     elemP a t = elem a t =-= elem a (toList t)
 
