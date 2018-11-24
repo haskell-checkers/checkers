@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, KindSignatures
-           , Rank2Types, TypeOperators
+           , Rank2Types, TypeOperators, CPP
   #-}
 
 {-# OPTIONS_GHC -Wall #-}
@@ -701,6 +701,9 @@ foldable = const ( "foldable"
                  , [ ("foldr and foldMap", property foldrFoldMapP)
                    , ("foldl and foldMap", property foldlFoldMapP)
                    , ("fold and foldMap", property foldFoldMapP)
+#if MIN_VERSION_base(4,13,0)
+                   , ("foldMap'", property foldMap'P)
+#endif
                    , ("length", property lengthP)
                    , ("sum", property sumP)
                    , ("product", property productP)
@@ -720,6 +723,11 @@ foldable = const ( "foldable"
     foldlFoldMapP f z t = foldl f z t =-= appEndo (getDual (foldMap (Dual . Endo . flip f) t)) z
     foldFoldMapP :: t m -> Property
     foldFoldMapP t = fold t =-= foldMap id t
+#if MIN_VERSION_base(4,13,0)
+    -- TODO: Check strictness
+    foldMap'P :: (a -> m) -> t a -> Property
+    foldMap'P f t = foldMap' f t =-= foldl' (\acc a -> acc <> f a) mempty t
+#endif
     lengthP :: t a -> Property
     lengthP t = length t =-= (getSum . foldMap (Sum . const  1)) t
     sumP :: t n -> Property
