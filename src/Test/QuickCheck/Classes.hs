@@ -696,11 +696,14 @@ traversable = const ( "traversable"
 
 -- | Note that 'foldable' doesn't check the strictness of 'foldl'', `foldr'' and `foldMap''.
 foldable :: forall t a b m n o.
-            ( Foldable t, CoArbitrary a, CoArbitrary b, Arbitrary b
-            , Arbitrary (t a), Show b, Show (t a), EqProp b, Monoid m
-            , Arbitrary (t m), Show (t m), EqProp m, Arbitrary (t n)
-            , Show (t n), Num n, EqProp n, Arbitrary a, Show a, Eq a
-            , Ord o, Arbitrary (t o), Show (t o), EqProp o, EqProp a) =>
+            ( Foldable t
+            , CoArbitrary a, CoArbitrary b
+            , Arbitrary a, Arbitrary b, Arbitrary o, Arbitrary (t a), Arbitrary (t m), Arbitrary (t n), Arbitrary (t o)
+            , Monoid m
+            , Num n
+            , Ord o
+            , EqProp m, EqProp n, EqProp b, EqProp o, EqProp a
+            , Show (t m), Show (t n), Show (t o), Show b, Show (t a), Show o) =>
             t (a, b, m, n, o) -> TestBatch
 foldable = const ( "Foldable"
                  , [ ("foldr and foldMap", property foldrFoldMapP)
@@ -759,8 +762,8 @@ foldable = const ( "Foldable"
     -- TODO: Check strictness
     foldl'P :: (b -> a -> b) -> b -> t a -> Property
     foldl'P f z t = foldl' f z t =-= foldl' f z (toList t)
-    elemP :: a -> t a -> Property
-    elemP a t = elem a t =-= elem a (toList t)
+    elemP :: o -> t o -> Property
+    elemP o t = elem o t =-= elem o (toList t)
 
 foldableFunctor :: forall t a m.
                    ( Functor t, Foldable t
