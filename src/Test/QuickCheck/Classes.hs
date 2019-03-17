@@ -24,7 +24,7 @@ module Test.QuickCheck.Classes
   , applicative, applicativeMorphism, semanticApplicative
   , bind, bindMorphism, semanticBind, bindApply
   , monad, monadMorphism, semanticMonad, monadFunctor
-  , monadApplicative, arrow, arrowChoice, foldable, traversable
+  , monadApplicative, arrow, arrowChoice, foldable, foldableFunctor, traversable
   , monadPlus, monadOr, alt, alternative
   )
   where
@@ -762,5 +762,13 @@ foldable = const ( "Foldable"
     elemP :: a -> t a -> Property
     elemP a t = elem a t =-= elem a (toList t)
 
--- foldableFunctor
--- foldMap f = fold . fmap f
+foldableFunctor :: forall t a m.
+                   ( CoArbitrary a, Foldable t, EqProp m, Functor t, Arbitrary m
+                   , Monoid m, Arbitrary (t a), Show (t a)) =>
+                   t (a, m) -> TestBatch
+foldableFunctor = const ( "Foldable Functor"
+                        , [ ("foldMap f = fold . fmap f", property foldMapP) ]
+                        )
+  where
+    foldMapP :: (a -> m) -> t a -> Property
+    foldMapP f t = foldMap f t =-= fold (fmap f t)
