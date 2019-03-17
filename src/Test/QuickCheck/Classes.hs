@@ -694,6 +694,7 @@ traversable = const ( "traversable"
    fmapP f x = f `fmap` x =-= f `fmapDefault` x
    foldMapP f x = f `foldMap` x =-= f `foldMapDefault` x
 
+-- | Note that 'foldable' doesn't check the strictness of 'foldl'', `foldr'' and `foldMap''.
 foldable :: forall t a b m n o.
             ( Foldable t, CoArbitrary a, CoArbitrary b, Arbitrary b, Arbitrary (t a), Show b, Show (t a), EqProp b, Monoid m, Arbitrary (t m), Show (t m), EqProp m, Arbitrary (t n), Show (t n), Num n, EqProp n, Arbitrary a, Show a, Eq a, Ord o, Arbitrary (t o), Show (t o), EqProp o, EqProp a) =>
             t (a, b, m, n, o) -> TestBatch
@@ -701,19 +702,21 @@ foldable = const ( "foldable"
                  , [ ("foldr and foldMap", property foldrFoldMapP)
                    , ("foldl and foldMap", property foldlFoldMapP)
                    , ("fold and foldMap", property foldFoldMapP)
+                   , ("length", property lengthP)
 #if MIN_VERSION_base(4,13,0)
                    , ("foldMap'", property foldMap'P)
 #endif
-                   , ("length", property lengthP)
-                   , ("sum", property sumP)
-                   , ("product", property productP)
-                   , ("maximum", property maximumP)
-                   , ("minimum", property minimumP)
-                   , ("foldr1", property foldr1P)
-                   , ("foldl1", property foldl1P)
                    , ("foldr'", property foldr'P)
                    , ("foldl'", property foldl'P)
+                   , ("foldr1", property foldr1P)
+                   , ("foldl1", property foldl1P)
+                   , ("toList", property toListP)
+                   , ("null", property nullP)
                    , ("elem", property elemP)
+                   , ("maximum", property maximumP)
+                   , ("minimum", property minimumP)
+                   , ("sum", property sumP)
+                   , ("product", property productP)
                    ]
                  )
   where
@@ -723,13 +726,13 @@ foldable = const ( "foldable"
     foldlFoldMapP f z t = foldl f z t =-= appEndo (getDual (foldMap (Dual . Endo . flip f) t)) z
     foldFoldMapP :: t m -> Property
     foldFoldMapP t = fold t =-= foldMap id t
+    lengthP :: t a -> Property
+    lengthP t = length t =-= (getSum . foldMap (Sum . const  1)) t
 #if MIN_VERSION_base(4,13,0)
     -- TODO: Check strictness
     foldMap'P :: (a -> m) -> t a -> Property
     foldMap'P f t = foldMap' f t =-= foldl' (\acc a -> acc <> f a) mempty t
 #endif
-    lengthP :: t a -> Property
-    lengthP t = length t =-= (getSum . foldMap (Sum . const  1)) t
     sumP :: t n -> Property
     sumP t = sum t =-= (getSum . foldMap Sum) t
     productP :: t n -> Property
@@ -742,6 +745,10 @@ foldable = const ( "foldable"
     foldr1P f t = not (null t) ==> foldr1 f t =-= foldr1 f (toList t)
     foldl1P :: (a -> a -> a) -> t a -> Property
     foldl1P f t = not (null t) ==> foldl1 f t =-= foldl1 f (toList t)
+    toListP :: t a -> Property
+    toListP t = toList t =-= foldr (:) [] t
+    nullP :: t a -> Property
+    nullP t = null t =-= foldr (const (const False)) True t
     -- TODO: Check strictness
     foldr'P :: (a -> b -> b) -> b -> t a -> Property
     foldr'P f z t = foldr' f z t =-= foldr' f z (toList t)
