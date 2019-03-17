@@ -50,7 +50,7 @@ import Test.QuickCheck.Instances.Char ()
 
 -- | Total ordering.  @gen a@ ought to generate values @b@ satisfying @a
 -- `rel` b@ fairly often.
-ordRel :: forall a. (Ord a, Show a, Arbitrary a, EqProp a) =>
+ordRel :: forall a. (Ord a, Show a, Arbitrary a) =>
           BinRel a -> (a -> Gen a) -> TestBatch
 ordRel rel gen =
   ( "ord"
@@ -61,7 +61,7 @@ ordRel rel gen =
   )
 
 -- | Total ordering
-ord :: forall a. (Ord a, Show a, Arbitrary a, EqProp a) =>
+ord :: forall a. (Ord a, Show a, Arbitrary a) =>
        (a -> Gen a) -> TestBatch
 ord = ordRel (<=)
 
@@ -173,7 +173,7 @@ functorMonoid = const ("functor-monoid"
 -- properties.
 functor :: forall m a b c.
            ( Functor m
-           , Arbitrary a, Arbitrary b, Arbitrary c
+           , Arbitrary b, Arbitrary c
            , CoArbitrary a, CoArbitrary b
            , Show (m a), Arbitrary (m a), EqProp (m a), EqProp (m c)) =>
            m (a,b,c) -> TestBatch
@@ -231,12 +231,12 @@ semanticFunctor = const (functorMorphism (model1 :: forall b. f b -> g b))
 -- properties
 apply :: forall m a b c.
          ( Apply m
-         , Arbitrary a, CoArbitrary a, Arbitrary b, CoArbitrary b
+         , CoArbitrary a, Arbitrary b, CoArbitrary b
          , Arbitrary c, Arbitrary (m a)
          , Arbitrary (m (b -> c)), Show (m (b -> c))
          , Arbitrary (m (a -> b)), Show (m (a -> b))
-         , Show a, Show (m a)
-         , EqProp (m a), EqProp (m b), EqProp (m c)
+         , Show (m a)
+         , EqProp (m c)
          ) =>
          m (a,b,c) -> TestBatch
 apply = const ( "apply"
@@ -259,7 +259,7 @@ apply = const ( "apply"
 applyMorphism :: forall f g.
                  ( Apply f, Apply g
                  , Show (f NumT), Arbitrary (f NumT)
-                 , EqProp (g NumT), EqProp (g T)
+                 , EqProp (g T)
                  , Show (f (NumT -> T))
                  , Arbitrary (f (NumT -> T))
                  ) =>
@@ -277,7 +277,7 @@ semanticApply :: forall f g.
                  ( Model1 f g
                  , Apply f, Apply g
                  , Arbitrary (f NumT), Arbitrary (f (NumT -> T))
-                 , EqProp (g NumT), EqProp (g T)
+                 , EqProp (g T)
                  , Show (f NumT), Show (f (NumT -> T))
                  ) =>
                  f () -> TestBatch
@@ -354,9 +354,9 @@ semanticApplicative =
 -- | Properties to check that the 'bind' @m@ satisfies the bind properties
 bind :: forall m a b c.
         ( Bind m
-        , Show a, Arbitrary a, CoArbitrary a, Arbitrary b, CoArbitrary b
+        , CoArbitrary a, CoArbitrary b
         , Arbitrary (m a), EqProp (m a), Show (m a)
-        , Arbitrary (m b), EqProp (m b)
+        , Arbitrary (m b)
         , Arbitrary (m c), EqProp (m c)
         , Arbitrary (m (m (m a))), Show (m (m (m a)))
         ) =>
@@ -374,9 +374,8 @@ bind = const ( "bind laws"
    joinAssocP mmma = B.join (B.join mmma) =-= B.join (fmap B.join mmma)
 
 bindApply :: forall m a b.
-             ( Apply m, Bind m
-             , EqProp (m a), EqProp (m b)
-             , Show a, Arbitrary a
+             ( Bind m
+             , EqProp (m b)
              , Show (m a), Arbitrary (m a)
              , Show (m (a -> b)), Arbitrary (m (a -> b))) =>
              m (a, b) -> TestBatch
@@ -389,14 +388,12 @@ bindApply = const ( "bind apply"
 
 -- | 'bind' morphism properties
 bindMorphism :: forall f g.
-                ( Bind f, Bind g, Functor g
+                ( Bind f, Bind g
                 , Show (f NumT)
-                , Show (f (NumT -> T))
                 , Show (f (f (NumT -> T)))
                 , Arbitrary (f NumT), Arbitrary (f T)
-                , Arbitrary (f (NumT -> T))
                 , Arbitrary (f (f (NumT -> T)))
-                , EqProp (g NumT), EqProp (g T)
+                , EqProp (g T)
                 , EqProp (g (NumT -> T))
                 ) =>
                 (forall a. f a -> g a) -> TestBatch
@@ -414,14 +411,12 @@ bindMorphism q =
 semanticBind :: forall f g.
   ( Model1 f g
   , Bind f, Bind g
-  , EqProp (g T) , EqProp (g NumT)
+  , EqProp (g T)
   , EqProp (g (NumT -> T))
   , Arbitrary (f T) , Arbitrary (f NumT)
   , Arbitrary (f (f (NumT -> T)))
-  , Arbitrary (f (NumT -> T))
   , Show (f (f (NumT -> T)))
-  , Show (f (NumT -> T)) , Show (f NumT)
-  , Functor g
+  , Show (f NumT)
   ) =>
   f () -> TestBatch
 semanticBind = const (bindMorphism (model1 :: forall b. f b -> g b))
@@ -430,7 +425,7 @@ semanticBind = const (bindMorphism (model1 :: forall b. f b -> g b))
 -- | Properties to check that the 'Monad' @m@ satisfies the monad properties
 monad :: forall m a b c.
          ( Monad m
-         , Show a, Arbitrary a, CoArbitrary a, Arbitrary b, CoArbitrary b
+         , Show a, Arbitrary a, CoArbitrary a, CoArbitrary b
          , Arbitrary (m a), EqProp (m a), Show (m a)
          , Arbitrary (m b), EqProp (m b)
          , Arbitrary (m c), EqProp (m c)
@@ -453,8 +448,8 @@ monad = const ( "monad laws"
 
 -- | Law for monads that are also instances of 'Functor'.
 monadFunctor :: forall m a b.
-                ( Functor m, Monad m
-                , Arbitrary a, Arbitrary b, CoArbitrary a
+                ( Monad m
+                , Arbitrary b, CoArbitrary a
                 , Arbitrary (m a), Show (m a), EqProp (m b)) =>
                 m (a, b) -> TestBatch
 monadFunctor = const ( "monad functor"
@@ -464,7 +459,7 @@ monadFunctor = const ( "monad functor"
    bindReturnP f xs = fmap f xs =-= (xs >>= return . f)
 
 monadApplicative :: forall m a b.
-                    ( Applicative m, Monad m
+                    ( Monad m
                     , EqProp (m a), EqProp (m b)
                     , Show a, Arbitrary a
                     , Show (m a), Arbitrary (m a)
@@ -486,12 +481,10 @@ monadApplicative = const ( "monad applicative"
 
 -- | 'Applicative' morphism properties
 monadMorphism :: forall f g.
-                 ( Monad f, Monad g, Functor g
+                 ( Monad f, Monad g
                  , Show (f NumT)
-                 , Show (f (NumT -> T))
                  , Show (f (f (NumT -> T)))
                  , Arbitrary (f NumT), Arbitrary (f T)
-                 , Arbitrary (f (NumT -> T))
                  , Arbitrary (f (f (NumT -> T)))
                  , EqProp (g NumT), EqProp (g T)
                  , EqProp (g (NumT -> T))
@@ -534,10 +527,8 @@ semanticMonad :: forall f g.
   , EqProp (g (NumT -> T))
   , Arbitrary (f T) , Arbitrary (f NumT)
   , Arbitrary (f (f (NumT -> T)))
-  , Arbitrary (f (NumT -> T))
   , Show (f (f (NumT -> T)))
-  , Show (f (NumT -> T)) , Show (f NumT)
-  , Functor g
+  , Show (f NumT)
   ) =>
   f () -> TestBatch
 semanticMonad = const (monadMorphism (model1 :: forall b. f b -> g b))
@@ -545,7 +536,7 @@ semanticMonad = const (monadMorphism (model1 :: forall b. f b -> g b))
 -- | Laws for MonadPlus instances with left distribution.
 monadPlus :: forall m a b.
              ( MonadPlus m, Show (m a)
-             , Arbitrary a, CoArbitrary a, Arbitrary (m a), Arbitrary (m b)
+             , CoArbitrary a, Arbitrary (m a), Arbitrary (m b)
              , EqProp (m a), EqProp (m b)) =>
              m (a, b) -> TestBatch
 monadPlus = const ( "MonadPlus laws"
@@ -585,7 +576,7 @@ monadOr = const ( "MonadOr laws"
    leftCatchP a b = return a `mplus` b =-= return a
 
 -- | Check Alt Semigroup law
-alt :: forall f a. ( Alt f, Arbitrary a, Arbitrary (f a)
+alt :: forall f a. ( Alt f, Arbitrary (f a)
                    , EqProp (f a), Show (f a)) =>
        f a -> TestBatch
 alt = const ( "Alt laws"
@@ -593,7 +584,7 @@ alt = const ( "Alt laws"
 
 
 -- | Check Alternative Monoid laws
-alternative :: forall f a. ( Alternative f, Arbitrary a, Arbitrary (f a)
+alternative :: forall f a. ( Alternative f, Arbitrary (f a)
                            , EqProp (f a), Show (f a)) =>
                f a -> TestBatch
 alternative = const ( "Alternative laws"
@@ -607,15 +598,13 @@ alternative = const ( "Alternative laws"
 arrow :: forall a b c d e.
          ( Arrow a
          , Show (a d e), Show (a c d), Show (a b c)
-         , Show b, Show c, Show d, Show e
          , Arbitrary (a d e), Arbitrary (a c d), Arbitrary (a b c)
-         , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
+         , Arbitrary c, Arbitrary d, Arbitrary e
          , CoArbitrary b, CoArbitrary c, CoArbitrary d
          , EqProp (a b e), EqProp (a b d)
          , EqProp (a (b,d) c)
          , EqProp (a (b,d) (c,d)), EqProp (a (b,e) (d,e))
          , EqProp (a (b,d) (c,e))
-         , EqProp b, EqProp c, EqProp d, EqProp e
          ) =>
          a b (c,d,e) -> TestBatch
 arrow = const ("arrow laws"
@@ -656,7 +645,7 @@ arrowChoice :: forall a b c d e.
                ( ArrowChoice a
                , Show (a b c)
                , Arbitrary (a b c)
-               , Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e
+               , Arbitrary c, Arbitrary e
                , CoArbitrary b, CoArbitrary d
                , EqProp (a (Either b d) (Either c e))
                , EqProp (a (Either b d) (Either c d))
@@ -678,7 +667,7 @@ arrowChoice = const ("arrow choice laws"
 
 traversable :: forall f a b m.
                ( Traversable f, Monoid m, Show (f a)
-               , Arbitrary (f a), Arbitrary b, Arbitrary a, Arbitrary m
+               , Arbitrary (f a), Arbitrary b, Arbitrary m
                , CoArbitrary a
                , EqProp (f b), EqProp m) =>
                f (a, b, m) -> TestBatch

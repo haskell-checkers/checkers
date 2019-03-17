@@ -20,7 +20,7 @@ nonPositive = negate <$> nonNegative
 negative :: (Eq a, Num a, Arbitrary a) => Gen a
 negative = negate <$> positive
 
-nonZero :: (Eq a, Num a, Arbitrary a) => Gen a -> Gen a
+nonZero :: (Eq a, Num a) => Gen a -> Gen a
 nonZero g =
   sized (\s -> satisfiesM (/= 0) (if (s == 0) then (resize 1 g) else g))
 
