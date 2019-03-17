@@ -763,8 +763,12 @@ foldable = const ( "Foldable"
     elemP a t = elem a t =-= elem a (toList t)
 
 foldableFunctor :: forall t a m.
-                   ( CoArbitrary a, Foldable t, EqProp m, Functor t, Arbitrary m
-                   , Monoid m, Arbitrary (t a), Show (t a)) =>
+                   ( Functor t, Foldable t
+                   , CoArbitrary a
+                   , Arbitrary m, Arbitrary (t a)
+                   , EqProp m
+                   , Monoid m
+                   , Show (t a)) =>
                    t (a, m) -> TestBatch
 foldableFunctor = const ( "Foldable Functor"
                         , [ ("foldMap f = fold . fmap f", property foldMapP) ]
