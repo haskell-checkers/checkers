@@ -696,9 +696,13 @@ traversable = const ( "traversable"
 
 -- | Note that 'foldable' doesn't check the strictness of 'foldl'', `foldr'' and `foldMap''.
 foldable :: forall t a b m n o.
-            ( Foldable t, CoArbitrary a, CoArbitrary b, Arbitrary b, Arbitrary (t a), Show b, Show (t a), EqProp b, Monoid m, Arbitrary (t m), Show (t m), EqProp m, Arbitrary (t n), Show (t n), Num n, EqProp n, Arbitrary a, Show a, Eq a, Ord o, Arbitrary (t o), Show (t o), EqProp o, EqProp a) =>
+            ( Foldable t, CoArbitrary a, CoArbitrary b, Arbitrary b
+            , Arbitrary (t a), Show b, Show (t a), EqProp b, Monoid m
+            , Arbitrary (t m), Show (t m), EqProp m, Arbitrary (t n)
+            , Show (t n), Num n, EqProp n, Arbitrary a, Show a, Eq a
+            , Ord o, Arbitrary (t o), Show (t o), EqProp o, EqProp a) =>
             t (a, b, m, n, o) -> TestBatch
-foldable = const ( "foldable"
+foldable = const ( "Foldable"
                  , [ ("foldr and foldMap", property foldrFoldMapP)
                    , ("foldl and foldMap", property foldlFoldMapP)
                    , ("fold and foldMap", property foldFoldMapP)
