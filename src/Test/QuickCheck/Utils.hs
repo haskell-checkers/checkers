@@ -47,7 +47,7 @@ isCommutableBy (=~=) src (#) =
 isCommutable :: (Arbitrary a,Show a,Eq b) => (a -> a -> b) -> Property
 isCommutable = isCommutableBy (==) arbitrary
 
-isTotalOrder :: (Arbitrary a,Show a,Ord a) => a -> a -> Property
+isTotalOrder :: (Ord a) => a -> a -> Property
 isTotalOrder x y =
     classify (x > y)  "less than" $
     classify (x == y) "equals" $
