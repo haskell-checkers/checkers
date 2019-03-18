@@ -1,6 +1,6 @@
 module Control.Monad.Extensions (satisfiesM,if') where
 
-import Control.Applicative (Applicative,liftA3)
+import Control.Applicative (liftA3)
 
 satisfiesM :: Monad m => (a -> Bool) -> m a -> m a
 satisfiesM p x = x >>= if' p return (const (satisfiesM p x))
