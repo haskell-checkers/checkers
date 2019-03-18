@@ -35,7 +35,8 @@ import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
 import Data.Functor.Bind (Bind ((>>-)), apDefault)
 import qualified Data.Functor.Bind as B (Bind (join))
-import Data.Semigroup (Semigroup ((<>)))
+import Data.List.NonEmpty (NonEmpty)
+import Data.Semigroup (Semigroup (..))
 import Data.Monoid (Monoid (mappend, mempty), Endo(..), Dual(..), Sum(..), Product(..))
 import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
 import Control.Applicative
@@ -46,6 +47,7 @@ import Text.Show.Functions ()
 
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Instances.Char ()
+import Test.QuickCheck.Instances.NonEmpty ()
 
 
 -- | Total ordering.  @gen a@ ought to generate values @b@ satisfying @a
@@ -117,12 +119,21 @@ monoid = const ( "monoid"
 -- | Properties to check that the 'Semigroup' 'a' satisfies the semigroup
 -- properties.  The argument value is ignored and is present only for its
 -- type.
-semigroup :: forall a. (Semigroup a, Show a, Arbitrary a, EqProp a) =>
-             a -> TestBatch
+semigroup :: forall a n.
+             ( Semigroup a, Show a, Arbitrary a, EqProp a
+             , Integral n, Show n, Arbitrary n) =>
+             (a, n) -> TestBatch
 semigroup = const ( "semigroup"
                   , [("associativity", isAssoc ((<>) :: Binop a))
+                    ,("sconcat", property sconcatP)
+                    ,("stimes", property stimesP)
                     ]
                   )
+  where
+    sconcatP :: NonEmpty a -> Property
+    sconcatP as = sconcat as =-= foldr1 (<>) as
+    stimesP :: Positive n -> a -> Property
+    stimesP (Positive n) a = stimes n a =-= foldr1 (<>) (replicate (fromIntegral n) a)
 
 -- | Monoid homomorphism properties.  See also 'homomorphism'.
 monoidMorphism :: (Monoid a, Monoid b, EqProp b, Show a, Arbitrary a) =>
