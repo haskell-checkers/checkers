@@ -465,6 +465,9 @@ monad = const ( "monad laws"
    apP f x = (f <*> x) =-= (f `ap` x)
 
 -- | Law for monads that are also instances of 'Functor'.
+--
+-- Note that instances that satisfy 'applicative' and 'monad'
+-- are implied to satisfy this property too.
 monadFunctor :: forall m a b.
                 ( Monad m
                 , Arbitrary b, CoArbitrary a
@@ -476,6 +479,7 @@ monadFunctor = const ( "monad functor"
    bindReturnP :: (a -> b) -> m a -> Property
    bindReturnP f xs = fmap f xs =-= (xs >>= return . f)
 
+-- | Note that 'monad' also contains these properties.
 monadApplicative :: forall m a b.
                     ( Monad m
                     , EqProp (m a), EqProp (m b)
