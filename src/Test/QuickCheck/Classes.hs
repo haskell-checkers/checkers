@@ -113,13 +113,17 @@ monoid = const ( "monoid"
                , [ ("left  identity", leftId  mappend (mempty :: a))
                  , ("right identity", rightId mappend (mempty :: a))
                  , ("associativity" , isAssoc (mappend :: Binop a))
+#if MIN_VERSION_base(4,11,0)
                  , ("mappend = (<>)", property monoidSemigroupP)
+#endif
                  , ("mconcat", property mconcatP)
                  ]
                )
   where
+#if MIN_VERSION_base(4,11,0)
     monoidSemigroupP :: a -> a -> Property
     monoidSemigroupP x y = mappend x y =-= x <> y
+#endif
     mconcatP :: [a] -> Property
     mconcatP as = mconcat as =-= foldr mappend mempty as
 
