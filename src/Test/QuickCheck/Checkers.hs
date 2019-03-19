@@ -190,6 +190,7 @@ instance EqProp Char   where (=-=) = eq
 instance EqProp Int    where (=-=) = eq
 instance EqProp Float  where (=-=) = eq
 instance EqProp Double where (=-=) = eq
+instance EqProp Integer where (=-=) = eq
 
 -- Lists
 instance EqProp a => EqProp [a] where
