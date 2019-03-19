@@ -429,22 +429,29 @@ monad :: forall m a b c.
          , Arbitrary (m a), EqProp (m a), Show (m a)
          , Arbitrary (m b), EqProp (m b)
          , Arbitrary (m c), EqProp (m c)
+         , Show (m (a -> b)), Arbitrary (m (a -> b))
          ) =>
          m (a,b,c) -> TestBatch
 monad = const ( "monad laws"
               , [ ("left  identity", property leftP)
                 , ("right identity", property rightP)
                 , ("associativity" , property assocP)
+                , ("pure", property pureP)
+                , ("ap", property apP)
                 ]
               )
  where
    leftP  :: (a -> m b) -> a -> Property
    rightP :: m a -> Property
    assocP :: m a -> (a -> m b) -> (b -> m c) -> Property
+   pureP :: a -> Property
+   apP :: m (a -> b) -> m a -> Property
 
    leftP f a    = (return a >>= f)  =-= f a
    rightP m     = (m >>= return)    =-=  m
    assocP m f g = ((m >>= f) >>= g) =-= (m >>= (\x -> f x >>= g))
+   pureP x = (pure x :: m a) =-= return x
+   apP f x = (f <*> x) =-= (f `ap` x)
 
 -- | Law for monads that are also instances of 'Functor'.
 monadFunctor :: forall m a b.
