@@ -119,6 +119,8 @@ monoid = const ( "monoid"
 -- | Properties to check that the 'Semigroup' 'a' satisfies the semigroup
 -- properties.  The argument value is ignored and is present only for its
 -- type.
+--
+-- @since 0.5.0
 semigroup :: forall a n.
              ( Semigroup a, Show a, Arbitrary a, EqProp a
              , Integral n, Show n, Arbitrary n) =>
@@ -702,6 +704,8 @@ traversable = const ( "traversable"
    foldMapP f x = f `foldMap` x =-= f `foldMapDefault` x
 
 -- | Note that 'foldable' doesn't check the strictness of 'foldl'', `foldr'' and `foldMap''.
+--
+-- @since 0.4.13
 foldable :: forall t a b m n o.
             ( Foldable t
             , CoArbitrary a, CoArbitrary b
@@ -772,6 +776,7 @@ foldable = const ( "Foldable"
     elemP :: o -> t o -> Property
     elemP o t = elem o t =-= elem o (toList t)
 
+-- | @since 0.4.13
 foldableFunctor :: forall t a m.
                    ( Functor t, Foldable t
                    , CoArbitrary a
