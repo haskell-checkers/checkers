@@ -50,8 +50,9 @@ import Test.QuickCheck.Instances.Char ()
 import Test.QuickCheck.Instances.NonEmpty ()
 
 
--- | Total ordering.  @gen a@ ought to generate values @b@ satisfying @a
--- `rel` b@ fairly often.
+-- | Total ordering.
+--
+-- @gen a@ ought to generate values @b@ satisfying @a `rel` b@ fairly often.
 ordRel :: forall a. (Ord a, Show a, Arbitrary a) =>
           BinRel a -> (a -> Gen a) -> TestBatch
 ordRel rel gen =
@@ -62,12 +63,29 @@ ordRel rel gen =
     ]
   )
 
--- | Total ordering
+-- | 'Ord' laws.
+--
+-- @gen a@ ought to generate values @b@ satisfying @a `rel` b@ fairly often.
 ord :: forall a. (Ord a, Show a, Arbitrary a) =>
        (a -> Gen a) -> TestBatch
-ord = ordRel (<=)
-
-
+ord gen =
+    ( "Ord"
+    , [ ("Reflexivity of (<=)", reflexive ((<=) :: a -> a -> Bool))
+      , ("Transitivity of (<=)", transitive (<=) gen)
+      , ("Antisymmetry of (<=)", antiSymmetric (<=) gen)
+      , ("x >= y = y <= x", p (\x y -> (x >= y) === (y <= x)))
+      , ("x < y = x <= y && x /= y", p (\x y -> (x < y) === (x <= y && x /= y)))
+      , ("x > y = y < x", p (\x y -> (x > y) === (y < x)))
+      , ("x < y = compare x y == LT", p (\x y -> (x < y) === (compare x y == LT)))
+      , ("x > y = compare x y == GT", p (\x y -> (x > y) === (compare x y == GT)))
+      , ("x == y = compare x y == EQ", p (\x y -> (x == y) === (compare x y == EQ)))
+      , ("min x y == if x <= y then x else y = True", p (\x y -> min x y === if x <= y then x else y))
+      , ("max x y == if x >= y then x else y = True", p (\x y -> max x y === if x >= y then x else y))
+      ]
+    )
+  where
+    p :: (a -> a -> Property) -> Property
+    p = property
 
 -- | 'Ord' morphism properties.  @h@ is an 'Ord' morphism iff:
 --
