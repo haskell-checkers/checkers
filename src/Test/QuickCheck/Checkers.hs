@@ -263,18 +263,13 @@ symmetric rel gen =
     forAll (gen a) $ \ b ->
       (a `rel` b) ==> (b `rel` a)
 
--- | Symmetric property: @a `rel` b && b `rel` a ==> a == b@.  Generate
--- @a@ randomly, but use @gen a@ to generate @b@.  @gen@ ought to satisfy
--- both @rel@ directions fairly often but not always.
+-- | Antisymmetric property: @(a `rel` b) && (a /= b) ==> not (b `rel` a)@.
+--
+-- @since 0.5.0
 antiSymmetric :: (Arbitrary a, Show a, Eq a) =>
-                 BinRel a -> (a -> Gen a) -> Property
-antiSymmetric rel gen =
-  property $ \ a ->
-    forAll (gen a) $ \ b ->
-      (a `rel` b) && (b `rel` a) ==> a == b
-
-
-
+                 BinRel a -> Property
+antiSymmetric rel =
+  property $ \ a b -> (a `rel` b) && (a /= b) ==> not (b `rel` a)
 
 -- | Has a given left identity, according to '(=-=)'
 leftId :: (Show a, Arbitrary a, EqProp a) => (i -> a -> a) -> i -> Property

@@ -59,7 +59,7 @@ ordRel rel gen =
   ( "ord"
   , [ ("reflexive"    , reflexive     rel    )
     , ("transitive"   , transitive    rel gen)
-    , ("antiSymmetric", antiSymmetric rel gen)
+    , ("antiSymmetric", antiSymmetric rel    )
     ]
   )
 
@@ -70,9 +70,9 @@ ord :: forall a. (Ord a, Show a, Arbitrary a) =>
        (a -> Gen a) -> TestBatch
 ord gen =
     ( "Ord"
-    , [ ("Reflexivity of (<=)", reflexive ((<=) :: a -> a -> Bool))
-      , ("Transitivity of (<=)", transitive (<=) gen)
-      , ("Antisymmetry of (<=)", antiSymmetric (<=) gen)
+    , [ ("Reflexivity of (<=)", reflexive le)
+      , ("Transitivity of (<=)", transitive le gen)
+      , ("Antisymmetry of (<=)", antiSymmetric le)
       , ("x >= y = y <= x", p (\x y -> (x >= y) === (y <= x)))
       , ("x < y = x <= y && x /= y", p (\x y -> (x < y) === (x <= y && x /= y)))
       , ("x > y = y < x", p (\x y -> (x > y) === (y < x)))
@@ -84,6 +84,8 @@ ord gen =
       ]
     )
   where
+    le :: a -> a -> Bool
+    le = (<=)
     p :: (a -> a -> Property) -> Property
     p = property
 
