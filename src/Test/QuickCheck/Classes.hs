@@ -35,7 +35,7 @@ import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
 import Data.Functor.Bind (Bind ((>>-)), apDefault)
 import qualified Data.Functor.Bind as B (Bind (join))
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty(..))
 import Data.Semigroup (Semigroup (..))
 import Data.Monoid (Monoid (mappend, mempty), Endo(..), Dual(..), Sum(..), Product(..))
 import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
@@ -47,7 +47,6 @@ import Text.Show.Functions ()
 
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Instances.Char ()
-import Test.QuickCheck.Instances.NonEmpty ()
 
 
 -- | Total ordering.
@@ -163,8 +162,8 @@ semigroup = const ( "semigroup"
                     ]
                   )
   where
-    sconcatP :: NonEmpty a -> Property
-    sconcatP as = sconcat as =-= foldr1 (<>) as
+    sconcatP :: a -> [a] -> Property
+    sconcatP a as = sconcat (a :| as) =-= foldr1 (<>) (a :| as)
     stimesP :: Positive n -> a -> Property
     stimesP (Positive n) a = stimes n a =-= foldr1 (<>) (replicate (fromIntegral n) a)
 
