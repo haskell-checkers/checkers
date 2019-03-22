@@ -42,7 +42,6 @@ Library
                        Test.QuickCheck.Instances.Eq
                        Test.QuickCheck.Instances.List
                        Test.QuickCheck.Instances.Maybe
-                       Test.QuickCheck.Instances.NonEmpty
                        Test.QuickCheck.Instances.Num
                        Test.QuickCheck.Instances.Ord
                        Test.QuickCheck.Instances.Tuple
