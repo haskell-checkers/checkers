@@ -743,7 +743,7 @@ traversable = const ( "traversable"
 foldable :: forall t a b m n o.
             ( Foldable t
             , CoArbitrary a, CoArbitrary b
-            , Arbitrary a, Arbitrary b, Arbitrary o, Arbitrary (t a), Arbitrary (t m), Arbitrary (t n), Arbitrary (t o)
+            , Arbitrary a, Arbitrary b, Arbitrary m, Arbitrary o, Arbitrary (t a), Arbitrary (t m), Arbitrary (t n), Arbitrary (t o)
             , Monoid m
             , Num n
             , Ord o
