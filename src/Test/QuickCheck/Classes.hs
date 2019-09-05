@@ -3,6 +3,9 @@
   #-}
 
 {-# OPTIONS_GHC -Wall #-}
+
+-- https://github.com/conal/checkers/pull/38
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      :  Test.QuickCheck.Classes
