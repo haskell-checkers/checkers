@@ -44,7 +44,6 @@ module Test.QuickCheck.Checkers
   ) where
 
 import Data.Function (on)
-import Data.Monoid (Monoid (mempty, mappend))
 import Control.Applicative
 import Control.Arrow ((***),first)
 import qualified Control.Exception as Ex
