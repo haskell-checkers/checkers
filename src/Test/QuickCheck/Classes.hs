@@ -2,12 +2,6 @@
            , Rank2Types, TypeOperators, CPP
   #-}
 
-{-# OPTIONS_GHC -Wall #-}
-
-#if MIN_VERSION_base(4,9,0)
--- https://github.com/conal/checkers/pull/38
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
-#endif
 ----------------------------------------------------------------------
 -- |
 -- Module      :  Test.QuickCheck.Classes
@@ -34,7 +28,6 @@ module Test.QuickCheck.Classes
   )
   where
 
-import Control.Applicative ((<$>))
 import Data.Foldable (Foldable(..))
 import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
@@ -42,9 +35,9 @@ import Data.Functor.Bind (Bind ((>>-)), apDefault)
 import qualified Data.Functor.Bind as B (Bind (join))
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Semigroup (Semigroup (..))
-import Data.Monoid (Monoid (mappend, mempty), Endo(..), Dual(..), Sum(..), Product(..))
-import Data.Traversable (Traversable (..), fmapDefault, foldMapDefault)
-import Control.Applicative
+import Data.Monoid (Endo(..), Dual(..), Sum(..), Product(..))
+import Data.Traversable (fmapDefault, foldMapDefault)
+import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus (..), ap, join)
 import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
 import Test.QuickCheck
@@ -745,6 +738,9 @@ traversable = const ( "traversable"
 -- | Note that 'foldable' doesn't check the strictness of 'foldl'', `foldr'' and `foldMap''.
 --
 -- @since 0.4.13
+
+-- The (Arbitrary m) constraint is required with base >= 4.13, where we have an
+-- additional property for checking foldMap'.
 foldable :: forall t a b m n o.
             ( Foldable t
             , CoArbitrary a, CoArbitrary b
