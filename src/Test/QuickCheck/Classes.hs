@@ -4,8 +4,10 @@
 
 {-# OPTIONS_GHC -Wall #-}
 
+#if MIN_VERSION_base(4,9,0)
 -- https://github.com/conal/checkers/pull/38
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+#endif
 ----------------------------------------------------------------------
 -- |
 -- Module      :  Test.QuickCheck.Classes
