@@ -17,7 +17,7 @@ License:             BSD3
 License-File:        COPYING
 Stability:           experimental
 build-type:          Simple
-tested-with:         GHC==8.6.4, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2, GHC==7.10.3
+tested-with:         GHC==8.8.1, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2, GHC==7.10.3
 homepage:            https://github.com/conal/checkers
 source-repository head
   type:     git
