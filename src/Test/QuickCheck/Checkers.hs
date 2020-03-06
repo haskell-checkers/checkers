@@ -33,7 +33,7 @@ module Test.QuickCheck.Checkers
   -- * Model-based (semantics-based) testing
   , Model(..)
   , meq, meq1, meq2, meq3, meq4, meq5
-  , eqModels
+  , eqModels, denotationFor
   , Model1(..)
   -- * Some handy testing types
   -- , Positive, NonZero(..), NonNegative(..)
@@ -230,6 +230,19 @@ instance (Show a, Arbitrary a, EqProp b) => EqProp (a -> b) where
 eqModels :: (Model a b, EqProp b) => a -> a -> Property
 eqModels = (=-=) `on` model
 
+
+-- | @f `'denotationFor'` g@ proves that @f@ is a model for @g@, ie that
+-- @'model' . g '=-=' f@.
+denotationFor
+    :: (Model b b', Arbitrary a, EqProp b', Show a)
+    => (a -> b')
+    -> (a -> b)
+    -> TestBatch
+denotationFor f g =
+  ( "denotation"
+  , [("eq", model . g =-= f)]
+  )
+
 -- Other types
 -- instance EqProp a => EqProp (S.Stream a) where (=-=) = eqModels
 
@@ -404,9 +417,12 @@ instance Model Float  Float  where model = id
 instance Model Double Double where model = id
 instance Model String String where model = id
 
--- This next one requires UndecidableInstances
+-- These next two require UndecidableInstances
 instance (Model a b, Model a' b') => Model (a,a') (b,b') where
   model = model *** model
+
+instance Model b b' => Model (a -> b) (a -> b') where
+  model f = model . f
 
 -- instance Model (S.Stream a) (NonNegative Int -> a) where
 --   model s (NonNegative i) = s S.!! i
