@@ -51,7 +51,7 @@ import qualified Control.Exception as Ex
 import Data.List (foldl')
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Monoid hiding (
-#if __GLASGOW_HASKELL__ <= 810
+#if __GLASGOW_HASKELL__ < 810
     First, Last
 #endif
                           )
