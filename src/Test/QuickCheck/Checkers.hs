@@ -57,7 +57,6 @@ import Data.Monoid hiding (
                           )
 
 import Data.Complex
-import Data.Ord
 import Data.Proxy
 import Data.Ratio
 import Data.Functor.Identity
@@ -268,9 +267,6 @@ instance EqProp (f a) => EqProp (Alt f a)
 #if __GLASGOW_HASKELL__ >= 806
 instance EqProp (f a) => EqProp (Ap f a)
 #endif
-
--- Orderings
-instance EqProp a => EqProp (Down a)
 
 -- Lists
 instance EqProp a => EqProp [a]
