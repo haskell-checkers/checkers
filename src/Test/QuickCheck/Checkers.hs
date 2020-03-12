@@ -60,10 +60,13 @@ import Data.Complex
 import Data.Ord
 import Data.Proxy
 import Data.Ratio
-import Data.Functor.Compose
 import Data.Functor.Identity
+
+#if __GLASGOW_HASKELL__ >= 800
+import Data.Functor.Compose
 import qualified Data.Functor.Product as F
 import qualified Data.Functor.Sum as F
+#endif
 import Data.Semigroup
 import GHC.Generics
 import System.Random
@@ -262,7 +265,9 @@ instance EqProp Any
 instance EqProp a => EqProp (Sum a)
 instance EqProp a => EqProp (Product a)
 instance EqProp (f a) => EqProp (Alt f a)
+#if __GLASGOW_HASKELL__ >= 806
 instance EqProp (f a) => EqProp (Ap f a)
+#endif
 
 -- Orderings
 instance EqProp a => EqProp (Down a)
@@ -284,12 +289,14 @@ instance (EqProp a, EqProp b, EqProp c, EqProp d) => EqProp (a,b,c,d)
 instance (EqProp a, EqProp b) => EqProp (Either a b)
 
 -- Functors
+#if __GLASGOW_HASKELL__ >= 800
 instance EqProp (f (g a)) => EqProp (Compose f g a)
+instance (EqProp (f a), EqProp (g a)) => EqProp (F.Sum f g a)
+#endif
+instance (EqProp (f a), EqProp (g a)) => EqProp (F.Product f g a)
 instance EqProp a => EqProp (Identity a)
 instance EqProp a => EqProp (Const a b)
 instance EqProp (Proxy a)
-instance (EqProp (f a), EqProp (g a)) => EqProp (F.Sum f g a)
-instance (EqProp (f a), EqProp (g a)) => EqProp (F.Product f g a)
 
 -- Function equality
 instance (Show a, Arbitrary a, EqProp b) => EqProp (a -> b) where
