@@ -288,8 +288,8 @@ instance (EqProp a, EqProp b) => EqProp (Either a b)
 #if __GLASGOW_HASKELL__ >= 800
 instance EqProp (f (g a)) => EqProp (Compose f g a)
 instance (EqProp (f a), EqProp (g a)) => EqProp (F.Sum f g a)
-#endif
 instance (EqProp (f a), EqProp (g a)) => EqProp (F.Product f g a)
+#endif
 instance EqProp a => EqProp (Identity a)
 instance EqProp a => EqProp (Const a b)
 instance EqProp (Proxy a)
