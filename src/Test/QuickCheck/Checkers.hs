@@ -247,7 +247,7 @@ instance EqProp Int     where (=-=) = eq
 instance EqProp Float   where (=-=) = eq
 instance EqProp Double  where (=-=) = eq
 instance EqProp Integer where (=-=) = eq
-instance EqProp a => EqProp (Complex a)
+instance Eq a => EqProp (Complex a) where (=-=) = eq
 instance Eq a => EqProp (Ratio a) where (=-=) = eq
 
 -- Semigroups
