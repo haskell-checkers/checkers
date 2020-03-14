@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances
            , FlexibleContexts, TypeSynonymInstances, GeneralizedNewtypeDeriving
-           , UndecidableInstances, ScopedTypeVariables
+           , UndecidableInstances, ScopedTypeVariables, DefaultSignatures
+           , TypeOperators, CPP
   #-}
 {-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
 
@@ -48,6 +49,25 @@ import Control.Applicative
 import Control.Arrow ((***),first)
 import qualified Control.Exception as Ex
 import Data.List (foldl')
+import Data.List.NonEmpty (NonEmpty (..))
+import Data.Monoid hiding (
+#if __GLASGOW_HASKELL__ < 810
+    First, Last
+#endif
+                          )
+
+import Data.Complex
+import Data.Proxy
+import Data.Ratio
+import Data.Functor.Identity
+
+#if __GLASGOW_HASKELL__ >= 800
+import Data.Functor.Compose
+import qualified Data.Functor.Product as F
+import qualified Data.Functor.Sum as F
+#endif
+import Data.Semigroup
+import GHC.Generics
 import System.Random
 import Test.QuickCheck hiding (generate)
 import Test.QuickCheck.Random (QCGen, newQCGen)
@@ -173,51 +193,106 @@ infix  4 =-=
 
 -- | Types of values that can be tested for equality, perhaps through
 -- random sampling.
-class EqProp a where (=-=) :: a -> a -> Property
+class EqProp a where
+  (=-=) :: a -> a -> Property
+  default (=-=) :: (Generic a, GEqProp (Rep a)) => a -> a -> Property
+  (=-=) = geq `on` from
+  {-# INLINEABLE (=-=) #-}
+
+class GEqProp g where
+  geq :: g x -> g x -> Property
+
+instance GEqProp g => GEqProp (M1 _1 _2 g) where
+  geq = geq `on` unM1
+  {-# INLINEABLE geq #-}
+
+instance (GEqProp g1, GEqProp g2) => GEqProp (g1 :*: g2) where
+  geq (g1a :*: g1b) (g2a :*: g2b) = geq g1a g2a .&&. geq g1b g2b
+  {-# INLINEABLE geq #-}
+
+instance (GEqProp g1, GEqProp g2) => GEqProp (g1 :+: g2) where
+  geq (L1 g1) (L1 g2) = geq g1 g2
+  geq (R1 g1) (R1 g2) = geq g1 g2
+  geq _ _             = property False
+  {-# INLINEABLE geq #-}
+
+instance EqProp a => GEqProp (K1 _1 a) where
+  geq = (=-=) `on` unK1
+  {-# INLINEABLE geq #-}
+
+instance GEqProp U1 where
+  geq U1 U1 = property True
+  {-# INLINEABLE geq #-}
+
+instance GEqProp V1 where
+  geq _ _ = property True
+  {-# INLINEABLE geq #-}
 
 -- | For 'Eq' types as 'EqProp' types
 eq :: Eq a => a -> a -> Property
 a `eq` a' = property (a == a')
 
+
 -- Template: fill in with Eq types for a
 --   instance EqProp a where (=-=) = eq
 -- E.g.,
 
-instance EqProp ()     where (=-=) = eq
-instance EqProp Bool   where (=-=) = eq
-instance EqProp Char   where (=-=) = eq
-instance EqProp Int    where (=-=) = eq
-instance EqProp Float  where (=-=) = eq
-instance EqProp Double where (=-=) = eq
+instance EqProp ()
+instance EqProp Bool
+instance EqProp Char where (=-=) = eq
+instance EqProp Ordering
+
+-- Numeric
+instance EqProp Int     where (=-=) = eq
+instance EqProp Float   where (=-=) = eq
+instance EqProp Double  where (=-=) = eq
 instance EqProp Integer where (=-=) = eq
+instance Eq a => EqProp (Complex a) where (=-=) = eq
+instance Eq a => EqProp (Ratio a) where (=-=) = eq
+
+-- Semigroups
+instance EqProp a => EqProp (Min a)
+instance EqProp a => EqProp (Max a)
+instance EqProp a => EqProp (First a)
+instance EqProp a => EqProp (Last a)
+
+-- Monoids
+instance EqProp a => EqProp (Dual a)
+instance (Show a, Arbitrary a, EqProp a) => EqProp (Endo a)
+instance EqProp All
+instance EqProp Any
+instance EqProp a => EqProp (Sum a)
+instance EqProp a => EqProp (Product a)
+instance EqProp (f a) => EqProp (Alt f a)
+#if __GLASGOW_HASKELL__ >= 806
+instance EqProp (f a) => EqProp (Ap f a)
+#endif
 
 -- Lists
-instance EqProp a => EqProp [a] where
-    [] =-= [] = property True
-    x:xs =-= y:ys = x =-= y .&. xs =-= ys
-    _ =-= _ = property False
+instance EqProp a => EqProp [a]
+instance EqProp a => EqProp (NonEmpty a)
+instance EqProp a => EqProp (ZipList a)
 
 -- Maybe
-instance EqProp a => EqProp (Maybe a) where
-    Nothing =-= Nothing = property True
-    Just x =-= Just y = x =-= y
-    _ =-= _ = property False
+instance EqProp a => EqProp (Maybe a)
 
 -- Pairing
-instance (EqProp a, EqProp b) => EqProp (a,b) where
-  (a,b) =-= (a',b') = a =-= a' .&. b =-= b'
-
-instance (EqProp a, EqProp b, EqProp c) => EqProp (a,b,c) where
-  (a,b,c) =-=(a',b',c') = a =-= a' .&. b =-= b' .&. c =-= c'
-
-instance (EqProp a, EqProp b, EqProp c, EqProp d) => EqProp (a,b,c,d) where
-  (a,b,c,d) =-=(a',b',c',d') = a =-= a' .&. b =-= b' .&. c =-= c' .&. d =-= d'
+instance (EqProp a, EqProp b) => EqProp (a,b)
+instance (EqProp a, EqProp b, EqProp c) => EqProp (a,b,c)
+instance (EqProp a, EqProp b, EqProp c, EqProp d) => EqProp (a,b,c,d)
 
 -- Either
-instance (EqProp a, EqProp b) => EqProp (Either a b) where
-  (Left x)  =-=  (Left x') = x =-= x'
-  (Right x) =-= (Right x') = x =-= x'
-  _         =-=          _ = property False
+instance (EqProp a, EqProp b) => EqProp (Either a b)
+
+-- Functors
+#if __GLASGOW_HASKELL__ >= 800
+instance EqProp (f (g a)) => EqProp (Compose f g a)
+instance (EqProp (f a), EqProp (g a)) => EqProp (F.Sum f g a)
+instance (EqProp (f a), EqProp (g a)) => EqProp (F.Product f g a)
+#endif
+instance EqProp a => EqProp (Identity a)
+instance EqProp a => EqProp (Const a b)
+instance EqProp (Proxy a)
 
 -- Function equality
 instance (Show a, Arbitrary a, EqProp b) => EqProp (a -> b) where
