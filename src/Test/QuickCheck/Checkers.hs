@@ -50,11 +50,7 @@ import Control.Arrow ((***),first)
 import qualified Control.Exception as Ex
 import Data.List (foldl')
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Monoid hiding (
-#if __GLASGOW_HASKELL__ < 810
-    First, Last
-#endif
-                          )
+import Data.Monoid hiding (First, Last)
 
 import Data.Complex
 import Data.Proxy
