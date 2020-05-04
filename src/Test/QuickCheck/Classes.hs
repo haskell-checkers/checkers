@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, KindSignatures
-           , Rank2Types, TypeOperators, CPP
+           , Rank2Types, TypeOperators, CPP, TypeFamilies
   #-}
 
 ----------------------------------------------------------------------
@@ -110,7 +110,8 @@ ordMorphism h = ( "ord morphism"
 
 -- | The semantic function ('model') for @a@ is an 'ordMorphism'.
 semanticOrd :: forall a b.
-  ( Model a b
+  ( b ~ ModelOf a
+  , Model a
   , Ord a, Ord b
   , Show a
   , Arbitrary a
@@ -171,7 +172,8 @@ monoidMorphism :: (Monoid a, Monoid b, EqProp b, Show a, Arbitrary a) =>
 monoidMorphism q = ("monoid morphism", homomorphism monoidD monoidD q)
 
 semanticMonoid :: forall a b.
-  ( Model a b
+  ( b ~ ModelOf a
+  , Model a
   , Monoid a, Monoid b
   , Show a
   , Arbitrary a

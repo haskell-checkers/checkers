@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances
            , FlexibleContexts, TypeSynonymInstances, GeneralizedNewtypeDeriving
-           , UndecidableInstances, ScopedTypeVariables
+           , UndecidableInstances, ScopedTypeVariables, TypeFamilies
   #-}
 {-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
 
@@ -43,9 +43,12 @@ module Test.QuickCheck.Checkers
   , arbitrarySatisfying
   ) where
 
+import Data.Word
+import Data.List.NonEmpty (NonEmpty)
+import Data.Bifunctor (bimap)
 import Data.Function (on)
 import Control.Applicative
-import Control.Arrow ((***),first)
+import Control.Arrow (first)
 import qualified Control.Exception as Ex
 import Data.List (foldl')
 import System.Random
@@ -227,15 +230,15 @@ instance (Show a, Arbitrary a, EqProp b) => EqProp (a -> b) where
 --   f =-= f' = property (probablisticPureCheck defaultConfig
 --                                              (\x -> f x =-= g x))
 
-eqModels :: (Model a b, EqProp b) => a -> a -> Property
+eqModels :: (Model a, EqProp (ModelOf a)) => a -> a -> Property
 eqModels = (=-=) `on` model
 
 
 -- | @f `'denotationFor'` g@ proves that @f@ is a model for @g@, ie that
 -- @'model' . g '=-=' f@.
 denotationFor
-    :: (Model b b', Arbitrary a, EqProp b', Show a)
-    => (a -> b')
+    :: (Model b, Arbitrary a, EqProp (ModelOf b), Show a)
+    => (a -> ModelOf b)
     -> (a -> b)
     -> TestBatch
 denotationFor f g =
@@ -367,31 +370,32 @@ h `funEq` h' = asFun h =-= asFun h'
 
 ---- From bytestring
 
-class Model a b | a -> b where
-  model :: a -> b  -- get the model from a concrete value
+class Model a where
+  type ModelOf a
+  model :: a -> ModelOf a  -- get the model from a concrete value
 
 -- note: bytestring doesn't make the fundep
 
 ---- Compare representation-level and model-level operations (commuting diagrams)
 
-meq  :: (Model a b, EqProp b) => a -> b -> Property
-meq1 :: (Model a b, Model a1 b1, EqProp b) =>
-        (a1 -> a) -> (b1 -> b) -> a1 -> Property
-meq2 :: (Model a b, Model a1 b1, Model a2 b2, EqProp b) =>
-        (a1 -> a2 -> a) -> (b1 -> b2 -> b) -> a1 -> a2 -> Property
-meq3 :: (Model a b, Model a1 b1, Model a2 b2, Model a3 b3, EqProp b) =>
+meq  :: (Model a, EqProp (ModelOf a)) => a -> ModelOf a -> Property
+meq1 :: (Model a, Model a1, EqProp (ModelOf a)) =>
+        (a1 -> a) -> (ModelOf a1 -> ModelOf a) -> a1 -> Property
+meq2 :: (Model a, Model a1, Model a2, EqProp (ModelOf a)) =>
+        (a1 -> a2 -> a) -> (ModelOf a1 -> ModelOf a2 -> ModelOf a) -> a1 -> a2 -> Property
+meq3 :: (Model a, Model a1, Model a2, Model a3, EqProp (ModelOf a)) =>
         (a1 -> a2 -> a3 -> a)
-     -> (b1 -> b2 -> b3 -> b)
+     -> (ModelOf a1 -> ModelOf a2 -> ModelOf a3 -> ModelOf a)
      -> a1 -> a2 -> a3 -> Property
-meq4 :: ( Model a b, Model a1 b1, Model a2 b2
-        , Model a3 b3, Model a4 b4, EqProp b) =>
+meq4 :: ( Model a, Model a1, Model a2
+        , Model a3, Model a4, EqProp (ModelOf a)) =>
         (a1 -> a2 -> a3 -> a4 -> a)
-     -> (b1 -> b2 -> b3 -> b4 -> b)
+     -> (ModelOf a1 -> ModelOf a2 -> ModelOf a3 -> ModelOf a4 -> ModelOf a)
      -> a1 -> a2 -> a3 -> a4 -> Property
-meq5 :: ( Model a b, Model a1 b1, Model a2 b2, Model a3 b3
-        , Model a4 b4, Model a5 b5, EqProp b) =>
+meq5 :: ( Model a, Model a1, Model a2, Model a3
+        , Model a4, Model a5, EqProp (ModelOf a)) =>
         (a1 -> a2 -> a3 -> a4 -> a5 -> a)
-     -> (b1 -> b2 -> b3 -> b4 -> b5 -> b)
+     -> (ModelOf a1 -> ModelOf a2 -> ModelOf a3 -> ModelOf a4 -> ModelOf a5 -> ModelOf a)
      -> a1 -> a2 -> a3 -> a4 -> a5 -> Property
 
 meq  a b =
@@ -410,19 +414,75 @@ meq5 f g = \a b c d e ->
 
 ---- Some model instances
 
-instance Model Bool   Bool   where model = id
-instance Model Char   Char   where model = id
-instance Model Int    Int    where model = id
-instance Model Float  Float  where model = id
-instance Model Double Double where model = id
-instance Model String String where model = id
+instance Model () where
+  type ModelOf () = ()
+  model = id
+instance Model Bool where
+  type ModelOf Bool = Bool
+  model = id
+instance Model Char where
+  type ModelOf Char = Char
+  model = id
+instance Model Int where
+  type ModelOf Int = Int
+  model = id
+instance Model Integer where
+  type ModelOf Integer = Integer
+  model = id
+instance Model Float where
+  type ModelOf Float = Float
+  model = id
+instance Model Double where
+  type ModelOf Double = Double
+  model = id
+instance Model Word where
+  type ModelOf Word = Word
+  model = id
+instance Model Word8 where
+  type ModelOf Word8 = Word8
+  model = id
+instance Model Word16 where
+  type ModelOf Word16 = Word16
+  model = id
+instance Model Word32 where
+  type ModelOf Word32 = Word32
+  model = id
+instance Model Word64 where
+  type ModelOf Word64 = Word64
+  model = id
 
--- These next two require UndecidableInstances
-instance (Model a b, Model a' b') => Model (a,a') (b,b') where
-  model = model *** model
+-- These next several require UndecidableInstances
+instance (Model a1, Model a2) => Model (a1, a2) where
+  type ModelOf (a1, a2) = (ModelOf a1, ModelOf a2)
+  model (a1, a2) = (model a1, model a2)
 
-instance Model b b' => Model (a -> b) (a -> b') where
+instance (Model a1, Model a2, Model a3) => Model (a1, a2, a3) where
+  type ModelOf (a1, a2, a3) = (ModelOf a1, ModelOf a2, ModelOf a3)
+  model (a1, a2, a3) = (model a1, model a2, model a3)
+
+instance (Model a1, Model a2, Model a3, Model a4) => Model (a1, a2, a3, a4) where
+  type ModelOf (a1, a2, a3, a4) = (ModelOf a1, ModelOf a2, ModelOf a3, ModelOf a4)
+  model (a1, a2, a3, a4) = (model a1, model a2, model a3, model a4)
+
+instance Model b => Model (a -> b) where
+  type ModelOf (a -> b) = a -> ModelOf b
   model f = model . f
+
+instance Model a => Model (Maybe a) where
+  type ModelOf (Maybe a) = Maybe (ModelOf a)
+  model = fmap model
+
+instance Model a => Model [a] where
+  type ModelOf [a] = [ModelOf a]
+  model = fmap model
+
+instance Model a => Model (NonEmpty a) where
+  type ModelOf (NonEmpty a) = NonEmpty (ModelOf a)
+  model = fmap model
+
+instance (Model a, Model b) => Model (Either a b) where
+  type ModelOf (Either a b) = Either (ModelOf a) (ModelOf b)
+  model = bimap model model
 
 -- instance Model (S.Stream a) (NonNegative Int -> a) where
 --   model s (NonNegative i) = s S.!! i
