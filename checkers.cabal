@@ -1,6 +1,6 @@
 Name:                checkers
-Version:             0.5.5
-Cabal-Version:       >= 1.6
+Version:             0.5.6
+Cabal-Version:       >= 1.10
 Synopsis:            Check properties on standard classes and data structures.
 Category:            Testing
 Description:
@@ -51,3 +51,4 @@ Library
   ghc-options:         -Wall
   if impl(ghc >= 8.0)
     ghc-options:       -Wredundant-constraints
+  Default-Language:    Haskell2010
