@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, KindSignatures
-           , Rank2Types, TypeOperators, CPP, TupleSections
+           , Rank2Types, TypeOperators, CPP
   #-}
 
 ----------------------------------------------------------------------
@@ -21,7 +21,6 @@ module Test.QuickCheck.Classes
   , functor, functorMorphism, semanticFunctor, functorMonoid
   , apply, applyMorphism, semanticApply
   , applicative, applicativeMorphism, semanticApplicative
-  , selective, selectiveMorphism, semanticSelective
   , bind, bindMorphism, semanticBind, bindApply
   , monad, monadMorphism, semanticMonad, monadFunctor
   , monadApplicative, arrow, arrowChoice, foldable, foldableFunctor, traversable
@@ -29,7 +28,6 @@ module Test.QuickCheck.Classes
   )
   where
 
-import Data.Bifunctor (bimap)
 import Data.Foldable (Foldable(..))
 import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
@@ -42,7 +40,6 @@ import Data.Traversable (fmapDefault, foldMapDefault)
 import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus (..), ap, join)
 import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
-import Control.Selective (Selective (..), (<*?))
 import Test.QuickCheck
 import Text.Show.Functions ()
 
@@ -393,68 +390,6 @@ semanticApplicative :: forall f g.
   f () -> TestBatch
 semanticApplicative =
   const (applicativeMorphism (model1 :: forall b. f b -> g b))
-
-
--- | Properties to check that the 'Selective' @m@ satisfies the applicative
--- properties
-selective :: forall m a b c.
-               ( Selective m
-               , Arbitrary a, Arbitrary b
-               , Arbitrary (m (Either a a)), Show (m (Either a a))
-               , Arbitrary (m (Either a b)), Show (m (Either a b))
-               , Arbitrary (m (Either c (a -> b))), Show (m (Either c (a -> b)))
-               , Arbitrary (m (a -> b)), Show (m (a -> b))
-               , Arbitrary (m (c -> a -> b)), Show (m (c -> a -> b))
-               , Show a, Show b
-               , EqProp (m a), EqProp (m b)
-               ) =>
-               m (a,b,c) -> TestBatch
-selective = const ( "selective"
-                  , [ ("identity"    , property identityP)
-                    , ("distributivity" , property distributivityP)
-                    , ("associativity", property associativityP)
-                    ]
-                  )
- where
-   identityP     :: m (Either a a) -> Property
-   distributivityP  :: Either a b -> m (a -> b) -> m (a -> b) -> Property
-   associativityP :: m (Either a b) -> m (Either c (a -> b)) -> m (c -> a -> b) -> Property
-
-   identityP x = (x <*? pure id) =-= fmap (either id id) x
-   distributivityP x y z = (pure x <*? (y *> z)) =-= ((pure x <*? y) *> (pure x <*? z))
-   associativityP x y z = (x <*? (y <*? z)) =-= ((f <$> x) <*? (g <$> y) <*? (h <$> z))
-    where
-     f = fmap Right
-     g y' a = bimap (,a) ($a) y'
-     h = uncurry
-
-
--- | 'Selective' morphism properties
-selectiveMorphism :: forall f g.
-                       ( Selective f, Selective g
-                       , EqProp (g T)
-                       , Arbitrary (f (NumT -> T)),     Show (f (NumT -> T))
-                       , Arbitrary (f (Either NumT T)), Show (f (Either NumT T))
-                       ) =>
-                       (forall a. f a -> g a) -> TestBatch
-selectiveMorphism q =
-  ( "selective morphism"
-  , [("select", property selectP)] )
- where
-   selectP :: f (Either NumT T) -> f (NumT -> T) -> Property
-   selectP me mf = q (select me mf) =-= select (q me) (q mf)
-
--- | The semantic function ('model1') for @f@ is an 'applicativeMorphism'.
-semanticSelective :: forall f g.
-  ( Model1 f g
-  , Selective f, Selective g
-  , Arbitrary (f (NumT -> T)),     Show (f (NumT -> T))
-  , Arbitrary (f (Either NumT T)), Show (f (Either NumT T))
-  , EqProp (g T)
-  ) =>
-  f () -> TestBatch
-semanticSelective =
-  const (selectiveMorphism (model1 :: forall b. f b -> g b))
 
 
 -- | Properties to check that the 'bind' @m@ satisfies the bind properties
