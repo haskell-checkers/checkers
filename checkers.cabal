@@ -1,5 +1,5 @@
 Name:                checkers
-Version:             0.5.6
+Version:             0.5.7
 Cabal-Version:       >= 1.10
 Synopsis:            Check properties on standard classes and data structures.
 Category:            Testing

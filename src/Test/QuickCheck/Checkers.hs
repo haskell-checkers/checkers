@@ -97,18 +97,21 @@ unbatch :: TestBatch -> [Test]
 unbatch (batchName,props) = map (first ((batchName ++ ": ")++)) props
 
 -- TODO: consider a tree structure so that flattening is unnecessary.
+type QuickCheckRunner = Args -> Property -> IO ()
 
 -- | Run a batch of tests.  See 'quickBatch' and 'verboseBatch'.
-checkBatch :: Args -> TestBatch -> IO ()
-checkBatch args (name,tests) =
+checkBatch' :: QuickCheckRunner -> Args -> TestBatch -> IO ()
+checkBatch' runner args (name,tests) =
   do putStrLn $ "\n" ++ name ++ ":"
      mapM_ pr tests
  where
    pr (s,p) = do putStr (padTo (width + 4) ("  "++s ++ ":"))
-                 Ex.catch (quickCheckWith args p)
+                 Ex.catch (runner args p)
                           (print :: Ex.SomeException -> IO ())
    width    = foldl' max 0 (map (length.fst) tests)
 
+checkBatch :: Args -> TestBatch -> IO ()
+checkBatch = checkBatch' quickCheckWith
 
 padTo :: Int -> String -> String
 padTo n = take n . (++ repeat ' ')
@@ -119,14 +122,10 @@ quickBatch = checkBatch quick'
 
 -- | Check a batch verbosely.
 verboseBatch :: TestBatch -> IO ()
-verboseBatch = checkBatch verbose'
+verboseBatch = checkBatch' verboseCheckWith quick'
 
-quick', verbose' :: Args
+quick' :: Args
 quick'   = stdArgs { maxSuccess = 500 }
-verbose' = quick'
-           -- quick' { configEvery = \ n args -> show n ++ ":\n" ++ unlines args }
-
--- TODO: Restore verbose functionality.  How in QC2?
 
 {-
 
