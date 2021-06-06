@@ -97,6 +97,7 @@ unbatch :: TestBatch -> [Test]
 unbatch (batchName,props) = map (first ((batchName ++ ": ")++)) props
 
 -- TODO: consider a tree structure so that flattening is unnecessary.
+
 type QuickCheckRunner = Args -> Property -> IO ()
 
 -- | Run a batch of tests.  See 'quickBatch' and 'verboseBatch'.
