@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, KindSignatures
-           , TypeApplications, Rank2Types, TypeOperators, CPP
+           , Rank2Types, TypeOperators, CPP
   #-}
 
 ----------------------------------------------------------------------
@@ -733,10 +733,10 @@ traversable = const ( "traversable"
                     )
  where
    identityP :: Property
-   identityP = traverse @t @_ @b Identity =-= Identity
+   identityP = (traverse :: (b -> Identity b) -> t b -> Identity (t b)) Identity =-= Identity
 
    compositionP :: (a -> f b) -> (b -> f c) -> Property
-   compositionP f g =  traverse @t (Compose . fmap g . f) =-= Compose . fmap (traverse g) . traverse f
+   compositionP f g =  (traverse :: (a -> Compose f f c) -> t a -> Compose f f (t c)) (Compose . fmap g . f) =-= Compose . fmap (traverse g) . traverse f
 
    --naturalityP :: (forall x. (f x -> g x)) -> (a -> f b) -> Property
    --naturalityP t f = t . traverse @t f =-= traverse (t . f)
