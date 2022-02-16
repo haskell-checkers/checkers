@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, KindSignatures
-           , Rank2Types, TypeOperators, CPP
+           , Rank2Types, TypeApplications, TypeOperators, CPP
   #-}
 
 ----------------------------------------------------------------------
@@ -46,6 +46,7 @@ import Text.Show.Functions ()
 
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Instances.Char ()
+import Data.Traversable
 
 
 -- | Total ordering.
@@ -718,28 +719,38 @@ arrowChoice = const ("arrow choice laws"
     rightMovesP f g = (left f >>> right (arr g))
                         =-= ((right (arr g)) >>> left f)
 
-traversable :: forall t a b c f.
-               ( Traversable t, Applicative f
+traversable :: forall t a b c m f.
+               ( Traversable t, Applicative f, Monoid m
                , Arbitrary (t a), Arbitrary (t b), Arbitrary (f b), Arbitrary (f c)
+               , Arbitrary m, Arbitrary b
                , CoArbitrary a, CoArbitrary b
                , Show (t a), Show (t b)
-               , EqProp (t b), EqProp (f (f (t c)))) =>
-               t (f a, b, c) -> TestBatch
-traversable = const ( "traversable"
+               , EqProp (t b), EqProp (f (f (t c))), EqProp m) =>
+               t (f a, b, c, m) -> TestBatch
+traversable = const ( "Traversable"
                     , [ ("identity", property identityP)
                       , ("composition", property compositionP)
                       -- , ("naturality", property $ \(f :: f Int -> g Int) -> naturalityP f)
+                      , ("fmap", property fmapP)
+                      , ("foldMap", property foldMapP)
                       ]
                     )
  where
    identityP :: Property
-   identityP = (traverse :: (b -> Identity b) -> t b -> Identity (t b)) Identity =-= Identity
+   identityP = traverse @t @_ @b Identity =-= Identity
 
    compositionP :: (a -> f b) -> (b -> f c) -> Property
-   compositionP f g =  (traverse :: (a -> Compose f f c) -> t a -> Compose f f (t c)) (Compose . fmap g . f) =-= Compose . fmap (traverse g) . traverse f
+   compositionP f g = traverse @t (Compose . fmap g . f) =-= Compose . fmap (traverse g) . traverse f
 
+   --FIXME: Does not compile due to rank2 type.
    --naturalityP :: (forall x. (f x -> g x)) -> (a -> f b) -> Property
    --naturalityP t f = t . traverse @t f =-= traverse (t . f)
+
+   fmapP :: (a -> b) -> t a -> Property
+   fmapP f x = f `fmap` x =-= f `fmapDefault` x
+
+   foldMapP :: (a -> m) -> t a -> Property
+   foldMapP f x = f `foldMap` x =-= (f `foldMapDefault` x :: m)
 
 -- | Note that 'foldable' doesn't check the strictness of 'foldl'', `foldr'' and `foldMap''.
 --
