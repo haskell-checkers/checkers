@@ -23,11 +23,13 @@ module Test.QuickCheck.Classes
   , applicative, applicativeMorphism, semanticApplicative
   , bind, bindMorphism, semanticBind, bindApply
   , monad, monadMorphism, semanticMonad, monadFunctor
-  , monadApplicative, arrow, arrowChoice, foldable, foldableFunctor, traversable
+  , monadApplicative, arrow, arrowChoice, foldable, foldableFunctor, bifoldable, bifoldableBifunctor, traversable
   , monadPlus, monadOr, alt, alternative
   )
   where
 
+import Data.Bifoldable (Bifoldable (..))
+import Data.Bifunctor hiding (first, second)
 import Data.Foldable (Foldable(..))
 import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
@@ -826,3 +828,40 @@ foldableFunctor = const ( "Foldable Functor"
   where
     foldMapP :: (a -> m) -> t a -> Property
     foldMapP f t = foldMap f t =-= fold (fmap f t)
+
+bifoldable :: forall p a b c m.
+               ( Bifoldable p, Monoid m
+               , Show (p a b), Show (p m m)
+               , Arbitrary (p a b), Arbitrary (p m m), Arbitrary m
+               , CoArbitrary a, CoArbitrary b
+               , EqProp m, EqProp c, CoArbitrary c, Arbitrary c, Show c) =>
+               p a (b, c, m)  -> TestBatch
+bifoldable = const ( "Bifoldable"
+                    , [ ("identity", property identityP)
+                      , ("bifoldMap f g ≡ bifoldr (mappend . f) (mappend . g) mempty", property bifoldMapBifoldrP)
+                      , ("bifoldr f g z t ≡ appEndo (bifoldMap (Endo . f) (Endo . g) t) z", property bifoldrBifoldMapP)
+                      ]
+                    )
+ where
+   identityP :: Property
+   identityP = bifold =-= (bifoldMap id id :: p m m -> m)
+
+   bifoldMapBifoldrP :: (a -> m) -> (b -> m) -> Property
+   bifoldMapBifoldrP f g = bifoldMap f g =-= (bifoldr (mappend . f) (mappend . g) mempty :: p a b -> m)
+
+   bifoldrBifoldMapP :: (a -> c -> c) -> (b -> c -> c) -> c -> p a b -> Property
+   bifoldrBifoldMapP f g z t = bifoldr f g z t =-= appEndo (bifoldMap (Endo . f) (Endo . g) t) z
+
+bifoldableBifunctor :: forall p a b m.
+                       ( Bifoldable p, Bifunctor p, Monoid m
+                       , Show (p a b)
+                       , Arbitrary (p a b), Arbitrary m, CoArbitrary a, CoArbitrary b
+                       , EqProp m) =>
+                       p a (b, m) -> TestBatch
+bifoldableBifunctor = const ( "Bifoldable Bifunctor"
+                            , [ ("bifoldMap f g ≡  bifold . bimap f g", property bifoldBimapP) ]
+                            )
+  where
+    bifoldBimapP :: (a -> m) -> (b -> m) -> Property
+    bifoldBimapP f g = bifoldMap f g =-= (bifold . bimap f g :: p a b -> m)
+    
