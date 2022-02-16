@@ -38,6 +38,7 @@ import Data.Functor.Identity (Identity (..))
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Semigroup (Semigroup (..))
 import Data.Monoid (Endo(..), Dual(..), Sum(..), Product(..))
+import Data.Traversable
 import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus (..), ap, join)
 import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
@@ -46,7 +47,6 @@ import Text.Show.Functions ()
 
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Instances.Char ()
-import Data.Traversable
 
 
 -- | Total ordering.
@@ -719,27 +719,31 @@ arrowChoice = const ("arrow choice laws"
     rightMovesP f g = (left f >>> right (arr g))
                         =-= ((right (arr g)) >>> left f)
 
-traversable :: forall t a b c m f.
-               ( Traversable t, Applicative f, Monoid m
-               , Arbitrary (t a), Arbitrary (t b), Arbitrary (f b), Arbitrary (f c)
+traversable :: forall t a b c m f g.
+               ( Traversable t, Applicative f, Applicative g, Monoid m
+               , Arbitrary (t a), Arbitrary (t b), Arbitrary (f b), Arbitrary (g c)
+               , Arbitrary (t (f (g a)))
                , Arbitrary m, Arbitrary b
                , CoArbitrary a, CoArbitrary b
-               , Show (t a), Show (t b)
-               , EqProp (t b), EqProp (f (f (t c))), EqProp m) =>
-               t (f a, b, c, m) -> TestBatch
+               , Show (t a), Show (t b), Show (t (f (g a)))
+               , EqProp (t b), EqProp m, EqProp (f (g (t a))), EqProp (f (g (t c)))) => t (f a, g b, c, m)
+  -> TestBatch
 traversable = const ( "Traversable"
                     , [ ("identity", property identityP)
                       , ("composition", property compositionP)
                       -- , ("naturality", property $ \(f :: f Int -> g Int) -> naturalityP f)
                       , ("fmap", property fmapP)
                       , ("foldMap", property foldMapP)
+                      , ("sequenceA identity", property sequenceIdentityP)
+                      , ("sequenceA composition", property sequenceCompositionP)
+                      -- , ("sequenceA naturality", property $ \(f :: f a -> g a) -> sequenceNaturalityP f)
                       ]
                     )
  where
    identityP :: Property
    identityP = traverse @t @_ @b Identity =-= Identity
 
-   compositionP :: (a -> f b) -> (b -> f c) -> Property
+   compositionP :: (a -> f b) -> (b -> g c) -> Property
    compositionP f g = traverse @t (Compose . fmap g . f) =-= Compose . fmap (traverse g) . traverse f
 
    --FIXME: Does not compile due to rank2 type.
@@ -751,6 +755,16 @@ traversable = const ( "Traversable"
 
    foldMapP :: (a -> m) -> t a -> Property
    foldMapP f x = f `foldMap` x =-= (f `foldMapDefault` x :: m)
+
+   sequenceIdentityP :: Property
+   sequenceIdentityP = sequenceA @t @_ @b . fmap Identity =-= Identity
+
+   sequenceCompositionP :: Property
+   sequenceCompositionP = sequenceA @t @(Compose f g) @a . fmap Compose =-= Compose . fmap sequenceA . sequenceA
+
+   --FIXME: Does not compile due to rank2 type.
+   --sequenceNaturalityP :: (forall x. (f x -> g x)) -> Property
+   --sequenceNaturalityP t = t . sequenceA @t @_ @a =-= sequenceA . fmap t
 
 -- | Note that 'foldable' doesn't check the strictness of 'foldl'', `foldr'' and `foldMap''.
 --
