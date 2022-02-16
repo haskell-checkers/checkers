@@ -17,7 +17,7 @@ License:             BSD3
 License-File:        COPYING
 Stability:           experimental
 build-type:          Simple
-tested-with:         GHC==9.2.1, GHC==9.0.1, GHC==8.10.7, GHC==8.8.4, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2, GHC==8.0.2, GHC==7.10.3
+tested-with:         GHC==9.2.1, GHC==9.0.2, GHC==8.10.7, GHC==8.8.4, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2
 homepage:            https://github.com/haskell-checkers/checkers
 
 source-repository head
@@ -27,7 +27,7 @@ source-repository head
 Library
   hs-Source-Dirs:      src
   Extensions:
-  Build-Depends:       base >= 4.8 && < 5, random, QuickCheck>=2.3, array >= 0.1, semigroupoids >= 5 && < 6
+  Build-Depends:       base >= 4.10 && < 5, random, QuickCheck>=2.3, array >= 0.1, semigroupoids >= 5 && < 6
   if !impl(ghc >= 8.0)
     build-depends:
       semigroups          >= 0.18.2  && < 0.19
