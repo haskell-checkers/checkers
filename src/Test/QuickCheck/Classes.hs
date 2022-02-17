@@ -38,7 +38,7 @@ import Data.Functor.Identity (Identity (..))
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Semigroup (Semigroup (..))
 import Data.Monoid (Endo(..), Dual(..), Sum(..), Product(..))
-import Data.Traversable
+import Data.Traversable (fmapDefault, foldMapDefault)
 import Control.Applicative (Alternative(..))
 import Control.Monad (MonadPlus (..), ap, join)
 import Control.Arrow (Arrow,ArrowChoice,first,second,left,right,(>>>),arr)
