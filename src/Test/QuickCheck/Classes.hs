@@ -829,6 +829,7 @@ foldableFunctor = const ( "Foldable Functor"
     foldMapP :: (a -> m) -> t a -> Property
     foldMapP f t = foldMap f t =-= fold (fmap f t)
 
+-- | @since 0.5.7
 bifoldable :: forall p a b c m.
                ( Bifoldable p, Monoid m
                , Show (p a b), Show (p m m)
@@ -852,6 +853,7 @@ bifoldable = const ( "Bifoldable"
    bifoldrBifoldMapP :: (a -> c -> c) -> (b -> c -> c) -> c -> p a b -> Property
    bifoldrBifoldMapP f g z t = bifoldr f g z t =-= appEndo (bifoldMap (Endo . f) (Endo . g) t) z
 
+-- | @since 0.5.7
 bifoldableBifunctor :: forall p a b m.
                        ( Bifoldable p, Bifunctor p, Monoid m
                        , Show (p a b)
