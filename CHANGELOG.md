@@ -1,3 +1,11 @@
+## [0.6.0]
+
+* [Enhance `traversable` checks](https://github.com/haskell-checkers/checkers/pull/61)
+
+* [Remove redundant constraint from instance CoArbitrary Array](https://github.com/haskell-checkers/checkers/pull/65)
+
+[0.6.0]: https://github.com/haskell-checkers/checkers/compare/v0.5.7...v0.6.0
+
 ## [0.5.7]
 
 * [Add `bifoldable` and `bifoldableBifunctor` tests](https://github.com/haskell-checkers/checkers/pull/62)
