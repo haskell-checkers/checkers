@@ -17,7 +17,7 @@ License:             BSD3
 License-File:        COPYING
 Stability:           experimental
 build-type:          Simple
-tested-with:         GHC==9.2.1, GHC==9.0.2, GHC==8.10.7, GHC==8.8.4, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2
+tested-with:         GHC==9.4.1, GHC==9.2.4, GHC==9.0.2, GHC==8.10.7, GHC==8.8.4, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2
 homepage:            https://github.com/haskell-checkers/checkers
 extra-source-files:  README.md CHANGELOG.md
 
