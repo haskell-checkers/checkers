@@ -18,7 +18,7 @@ module Test.QuickCheck.Classes
   ( ordRel, ord, ordMorphism, semanticOrd
   , semigroup
   , monoid, monoidMorphism, semanticMonoid
-  , functor, functorMorphism, semanticFunctor, functorMonoid
+  , functor, bifunctor, functorMorphism, semanticFunctor, functorMonoid
   , apply, applyMorphism, semanticApply
   , applicative, applicativeMorphism, semanticApplicative
   , bind, bindMorphism, semanticBind, bindApply
@@ -30,6 +30,7 @@ module Test.QuickCheck.Classes
 
 import Data.Bifoldable (Bifoldable (..))
 import Data.Bifunctor hiding (first, second)
+import qualified Data.Bifunctor as Bifunctor
 import Data.Foldable (Foldable(..))
 import Data.Functor.Apply (Apply ((<.>)))
 import Data.Functor.Alt (Alt ((<!>)))
@@ -232,6 +233,32 @@ functor = const ( "functor"
 
    identityP = fmap id =-= (id :: m a -> m a)
    composeP g f = fmap g . fmap f =-= (fmap (g.f) :: m a -> m c)
+
+-- | Properties to check that the 'Bifunctor' @m@ satisfies the
+-- functor laws.
+bifunctor :: forall m a b c d.
+           ( Bifunctor m
+           , Arbitrary c, Arbitrary d
+           , CoArbitrary a, CoArbitrary b
+           , Show (m a b), Arbitrary (m a b), EqProp (m a b), EqProp (m c d)) =>
+           m (a,b,c,d) (a,b,c,d) -> TestBatch
+bifunctor = const ( "bifunctor"
+                , [ ("bimap id id ≡ id", property identityP)
+                  , ("first id ≡ id", property identityFirstP)
+                  , ("second id ≡ id", property identitySecondP)
+                  , ("bimap f g ≡ first f . second g", property bimapFirstSecondP)
+                  ]
+                )
+ where
+   identityP :: Property
+   identityFirstP :: Property
+   identitySecondP :: Property
+   bimapFirstSecondP  :: (b -> d) -> (a -> c) -> Property
+
+   identityP = bimap id id =-= (id :: m a b -> m a b)
+   identityFirstP = Bifunctor.first id =-= (id :: m a b -> m a b)
+   identitySecondP = Bifunctor.second id =-= (id :: m a b -> m a b)
+   bimapFirstSecondP g f = bimap f g =-= (Bifunctor.first f . Bifunctor.second g :: m a b -> m c d)
 
 -- Note the similarity between 'functor' and 'monoidMorphism'.  The
 -- functor laws say that 'fmap' is a homomorphism w.r.t '(.)':
