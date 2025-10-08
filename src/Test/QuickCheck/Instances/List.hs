@@ -10,7 +10,9 @@ module Test.QuickCheck.Instances.List
 
 import Test.QuickCheck hiding (infiniteList)
 import Test.QuickCheck.Instances.Num
-import Control.Applicative
+import Control.Applicative (Applicative (..))
+
+import Prelude hiding (Applicative (..))
 
 {- | Generates a non-empty list with the contents generated using its
      argument.

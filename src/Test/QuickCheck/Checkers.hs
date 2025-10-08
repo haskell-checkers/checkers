@@ -48,7 +48,7 @@ import Data.Function (on)
 import Control.Applicative
 import Control.Arrow ((***),first)
 import qualified Control.Exception as Ex
-import Data.List (foldl')
+import Data.Foldable (Foldable (..) )
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Monoid hiding (First, Last)
 
@@ -57,11 +57,9 @@ import Data.Proxy
 import Data.Ratio
 import Data.Functor.Identity
 
-#if __GLASGOW_HASKELL__ >= 800
 import Data.Functor.Compose
 import qualified Data.Functor.Product as F
 import qualified Data.Functor.Sum as F
-#endif
 import Data.Semigroup
 import GHC.Generics
 import System.Random
@@ -73,6 +71,8 @@ import Test.QuickCheck.Gen      (Gen (..)) -- for rand
 -- import Test.QuickCheck.Property (Prop(..)) -- for evaluate
 
 import Test.QuickCheck.Utils
+
+import Prelude hiding (Foldable (..))
 
 -- import Test.QuickCheck.Utils
 -- import Test.QuickCheck.Instances.Num
