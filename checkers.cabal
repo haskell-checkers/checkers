@@ -23,12 +23,12 @@ extra-source-files:  README.md CHANGELOG.md
 
 source-repository head
   type:     git
-  location: git://github.com/haskell-checkers/checkers.git
+  location: https://github.com/haskell-checkers/checkers.git
 
 Library
   hs-Source-Dirs:      src
   Extensions:
-  Build-Depends:       base >= 4.10 && < 5, random, QuickCheck>=2.3, array >= 0.1, semigroupoids >= 5 && < 6.1
+  Build-Depends:       base >= 4.10 && < 5, random < 2, QuickCheck>=2.3 && < 3, array >= 0.1 && < 1, semigroupoids >= 5 && < 6.1
 
   Exposed-Modules:
                        Test.QuickCheck.Utils
